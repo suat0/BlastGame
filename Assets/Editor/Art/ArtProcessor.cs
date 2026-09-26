@@ -275,7 +275,7 @@ namespace BlastGame.Game.EditorTools
             if (shapes.Count == sheet.Names.Length)
             {
                 for (int i = 0; i < shapes.Count; i++)
-                    Write(Crop(image, shapes[i]), sheet.Folder, sheet.Names[i]);
+                    Write(Crop(image, shapes[i]), FolderOf(sheet.Names[i], sheet.Folder), sheet.Names[i]);
                 return shapes.Count;
             }
 
@@ -293,7 +293,7 @@ namespace BlastGame.Game.EditorTools
                 int column = i % sheet.Columns;
                 int row = i / sheet.Columns;
                 var cell = new RectInt(column * cellWidth, image.height - (row + 1) * cellHeight, cellWidth, cellHeight);
-                Write(Trim(Crop(image, cell)), sheet.Folder, sheet.Names[i]);
+                Write(Trim(Crop(image, cell)), FolderOf(sheet.Names[i], sheet.Folder), sheet.Names[i]);
             }
 
             return sheet.Names.Length;
@@ -431,6 +431,11 @@ namespace BlastGame.Game.EditorTools
         }
 
         // --- helpers --------------------------------------------------------------------------
+
+        // Board pieces are drawn by SpriteRenderers on the board, so they go where BlockAtlas packs
+        // them rather than into the UI atlas - a board drawn from two textures is two batches.
+        private static string FolderOf(string name, string sheetFolder) =>
+            name.StartsWith("board_") ? "Board" : sheetFolder;
 
         // A few pixels of margin, so filtering never samples the texture's edge.
         private const int Margin = 4;

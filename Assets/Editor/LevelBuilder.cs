@@ -359,10 +359,64 @@ namespace BlastGame.Game.EditorTools
             frameRenderer.color = Well;
             frameRenderer.sortingOrder = -10;
 
+            // Blocks are drawn only inside this; the square is scaled to the board by BoardView.
+            Replace(game, "BoardMask");
+            var maskObject = new GameObject("BoardMask", typeof(SpriteMask));
+            maskObject.transform.SetParent(game, false);
+            var mask = maskObject.GetComponent<SpriteMask>();
+            mask.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Board/BoardMask.png");
+
+            // The ornate frame over the board's edge, above the blocks, hiding the line they appear from.
+            Replace(game, "BoardTrim");
+            var trim = new GameObject("BoardTrim", typeof(SpriteRenderer));
+            trim.transform.SetParent(game, false);
+            var trimRenderer = trim.GetComponent<SpriteRenderer>();
+            trimRenderer.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Board/board_frame.png");
+            trimRenderer.drawMode = SpriteDrawMode.Sliced;
+            trimRenderer.sortingOrder = 5;
+
+            BuildLevelBackground();
+
             var so = new SerializedObject(boardView);
             so.FindProperty("boardFrame").objectReferenceValue = frameRenderer;
+            so.FindProperty("boardMask").objectReferenceValue = mask;
+            so.FindProperty("boardTrim").objectReferenceValue = trimRenderer;
             so.FindProperty("boardArea").objectReferenceValue = boardArea;
             so.FindProperty("cellTile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Board/Cell.png");
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        // The chapter's picture behind everything, on the camera so a shake leaves it still. Dimmed a
+        // little: it is scenery, and the board in front of it is what has to read.
+        private static void BuildLevelBackground()
+        {
+            Camera camera = Camera.main;
+            Replace(camera.transform, "LevelBackground");
+
+            var go = new GameObject("LevelBackground", typeof(SpriteRenderer));
+            go.transform.SetParent(camera.transform, false);
+            go.transform.localPosition = new Vector3(0f, 0f, 20f);   // in front of the camera, behind the board
+
+            var renderer = go.GetComponent<SpriteRenderer>();
+            renderer.sortingOrder = -15;   // over the plain backdrop, under the board's well
+            renderer.color = new Color(0.82f, 0.82f, 0.88f, 1f);
+
+            var background = go.AddComponent<LevelBackground>();
+            var so = new SerializedObject(background);
+            so.FindProperty("controller").objectReferenceValue = Object.FindFirstObjectByType<GameController>();
+            so.FindProperty("viewCamera").objectReferenceValue = camera;
+
+            string[] chapters =
+            {
+                "Assets/Art/Backgrounds/bg_level_vault.jpg",
+                "Assets/Art/Backgrounds/bg_level_museum.jpg",
+                "Assets/Art/Backgrounds/bg_level_rooftop.jpg",
+            };
+
+            SerializedProperty list = so.FindProperty("chapters");
+            list.arraySize = chapters.Length;
+            for (int i = 0; i < chapters.Length; i++)
+                list.GetArrayElementAtIndex(i).objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(chapters[i]);
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

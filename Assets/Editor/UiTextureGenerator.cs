@@ -13,12 +13,14 @@ namespace BlastGame.Game.EditorTools
         private const string BackdropPath = "Assets/Art/Board/Backdrop.png";
         private const string FramePath = "Assets/Art/Board/Frame.png";
         private const string CellPath = "Assets/Art/Board/Cell.png";
+        private const string MaskPath = "Assets/Art/Board/BoardMask.png";
 
         public static void Generate()
         {
             WriteBackdrop();
             WriteFrame();
             WriteCell();
+            WriteMask();
 
             AssetDatabase.Refresh();
 
@@ -32,6 +34,9 @@ namespace BlastGame.Game.EditorTools
 
             // Sixty-four pixels per unit on a sixty-four pixel tile: one tile, one cell.
             ConfigureSprite(CellPath, 64f, Vector4.zero);
+
+            // Four pixels per unit on a four-pixel square: a one-unit mask the board scales to its size.
+            ConfigureSprite(MaskPath, 4f, Vector4.zero);
 
             Debug.Log("Backdrop, frame and cell tile written.");
         }
@@ -119,6 +124,18 @@ namespace BlastGame.Game.EditorTools
 
             texture.Apply();
             File.WriteAllBytes(FramePathSafe(CellPath), texture.EncodeToPNG());
+        }
+
+        // A plain white square for the board's SpriteMask. Only its shape matters to a mask, and a
+        // square scaled to the board is exactly the board.
+        private static void WriteMask()
+        {
+            var texture = new Texture2D(4, 4, TextureFormat.RGBA32, false);
+            var white = new Color[16];
+            for (int i = 0; i < white.Length; i++) white[i] = Color.white;
+            texture.SetPixels(white);
+            texture.Apply();
+            File.WriteAllBytes(FramePathSafe(MaskPath), texture.EncodeToPNG());
         }
 
         private static void ConfigureSprite(string path, float pixelsPerUnit, Vector4 border)

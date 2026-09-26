@@ -17,7 +17,8 @@ namespace BlastGame.Game
 
         public int RentedCount => idle.Length - idleCount;
 
-        public BlockPool(BlockView prefab, Transform parent, int capacity)
+        public BlockPool(BlockView prefab, Transform parent, int capacity,
+                         SpriteMaskInteraction masking = SpriteMaskInteraction.None)
         {
             if (prefab == null) throw new ArgumentNullException(nameof(prefab));
             if (capacity < 1) throw new ArgumentOutOfRangeException(nameof(capacity), capacity, "Pool needs at least one block.");
@@ -28,6 +29,7 @@ namespace BlastGame.Game
             {
                 BlockView block = UnityEngine.Object.Instantiate(prefab, parent);
                 block.gameObject.name = "Block";     // otherwise every object reads "Block(Clone)"
+                block.MaskInteraction = masking;
                 block.gameObject.SetActive(false);
 
                 idle[i] = block;

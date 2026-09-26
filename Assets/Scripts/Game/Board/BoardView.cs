@@ -62,6 +62,17 @@ namespace BlastGame.Game
 
         [SerializeField] private float framePadding = 0.3f;
 
+        [Tooltip("Clips the board's blocks to the board, so new blocks appear from behind the frame " +
+                 "rather than in mid-air above it. Scaled to the board here.")]
+        [SerializeField] private SpriteMask boardMask;
+
+        [Tooltip("The ornate frame drawn over the board's edge, nine-sliced to fit it.")]
+        [SerializeField] private SpriteRenderer boardTrim;
+
+        [Tooltip("How far the trim reaches past the cells, in world units - enough to cover the edge " +
+                 "blocks disappear behind.")]
+        [SerializeField] private float trimPadding = 0.3f;
+
         [Tooltip("Drawn under every cell, holes included, so the board keeps its shape when a column " +
                  "under a Box stays empty. From the block atlas, so the tiles join the board's batch.")]
         [SerializeField] private Sprite cellTile;
@@ -257,7 +268,8 @@ namespace BlastGame.Game
                 fallAnimator = new FallAnimator(board.CellCount, fallGravity, HandleBlockLanded);
 
                 // Redraw returns every block before renting any, so the peak is exactly CellCount.
-                pool = new BlockPool(blockPrefab, transform, board.CellCount);
+                pool = new BlockPool(blockPrefab, transform, board.CellCount,
+                                     boardMask != null ? SpriteMaskInteraction.VisibleInsideMask : SpriteMaskInteraction.None);
 
                 // A pool of its own rather than headroom in the board's. ApplyBlast releases the
                 // blasted blocks before renting the ones that replace them, so an effect holding one
@@ -784,6 +796,20 @@ namespace BlastGame.Game
         // both get a frame that fits without anyone remembering to resize it.
         private void FitFrame()
         {
+            Vector2 cells = new Vector2(board.Cols * CellSize, board.Rows * CellSize);
+
+            if (boardMask != null)
+            {
+                boardMask.transform.position = transform.position;
+                boardMask.transform.localScale = new Vector3(cells.x, cells.y, 1f);   // a one-unit square
+            }
+
+            if (boardTrim != null)
+            {
+                boardTrim.transform.position = transform.position;
+                boardTrim.size = cells + Vector2.one * (trimPadding * 2f);
+            }
+
             if (boardFrame == null) return;
 
             boardFrame.transform.position = transform.position;

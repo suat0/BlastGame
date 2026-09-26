@@ -8,7 +8,8 @@ namespace BlastGame.Game.EditorTools
     // right folder is all it takes: a forgotten compression setting or a background left at 4096 is
     // not something anyone has to remember to avoid.
     //
-    //   Art/Board        board sprites, packed into BlockAtlas with the blocks
+    //   Art/Board        board sprites, packed into BlockAtlas with the blocks; only generated
+    //                    board_ pieces are configured here, the case's sprites are left alone
     //   Art/UI           interface sprites, packed into UiAtlas
     //   Art/Backgrounds  full-screen art, unpacked, 2048 at most
     //   Art/Characters   portraits and poses, unpacked, 1024 at most
@@ -27,7 +28,8 @@ namespace BlastGame.Game.EditorTools
             var importer = (TextureImporter)assetImporter;
             string folder = assetPath.Substring(Root.Length);
 
-            if (folder.StartsWith("UI/")) Ui(importer);
+            if (folder.StartsWith("Board/board_")) BoardPiece(importer);
+            else if (folder.StartsWith("UI/")) Ui(importer);
             else if (folder.StartsWith("Backgrounds/")) Sprite(importer, 2048, "ASTC_6x6");
             else if (folder.StartsWith("Characters/")) Sprite(importer, 1024, "ASTC_4x4");
         }
@@ -52,6 +54,31 @@ namespace BlastGame.Game.EditorTools
             importer.spriteBorder = name.StartsWith("ribbon_")
                 ? new Vector4(width / 3f, 0f, width / 3f, 0f)
                 : new Vector4(border, border, border, border);
+        }
+
+        // Generated board art: a sprite on the board, nine-sliced, at a density that makes its border
+        // about half a cell. The case's own block sprites are left exactly as they were imported.
+        private static void BoardPiece(TextureImporter importer)
+        {
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = 250f;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+            importer.wrapMode = TextureWrapMode.Clamp;
+
+            // A full rectangle, not a tight mesh: nine-slicing needs the whole rect, and BlockAtlas packs
+            // tightly, which would otherwise hand the frame a mesh it cannot slice.
+            var settings = new TextureImporterSettings();
+            importer.ReadTextureSettings(settings);
+            settings.spriteMeshType = SpriteMeshType.FullRect;
+            importer.SetTextureSettings(settings);
+
+            if (importer.spriteBorder != Vector4.zero) return;
+
+            importer.GetSourceTextureWidthAndHeight(out int width, out int height);
+            float border = Mathf.Min(width, height) / 3f;
+            importer.spriteBorder = new Vector4(border, border, border, border);
         }
 
         private static void Sprite(TextureImporter importer, int maxSize, string mobileFormat)

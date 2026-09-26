@@ -63,6 +63,13 @@ namespace BlastGame.Game
             }
         }
 
+        // Board blocks draw only inside the board's mask, so a block entering from above appears from
+        // behind the frame. Effect blocks are not masked - a shard may fly past the board's edge.
+        public SpriteMaskInteraction MaskInteraction
+        {
+            set => spriteRenderer.maskInteraction = value;
+        }
+
 #if UNITY_EDITOR
         private void Reset() => spriteRenderer = GetComponent<SpriteRenderer>();
 #endif
