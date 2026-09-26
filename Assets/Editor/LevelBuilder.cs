@@ -20,7 +20,7 @@ namespace BlastGame.Game.EditorTools
     // is retired rather than left to drift.
     public static class LevelBuilder
     {
-        private const string BoxSpritePath = "Assets/Art/Box0.png";
+        private const string BoxSpritePath = "Assets/Art/Board/Box0.png";
 
         // One place for every colour in the HUD, picked against Match Villains' in-level HUD: a purple
         // bar, white plates, dark purple figures.
@@ -347,14 +347,14 @@ namespace BlastGame.Game.EditorTools
             backdrop.transform.localScale = new Vector3(20f, 1f, 1f);
 
             var backdropRenderer = backdrop.GetComponent<SpriteRenderer>();
-            backdropRenderer.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backdrop.png");
+            backdropRenderer.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Board/Backdrop.png");
             backdropRenderer.sortingOrder = -20;
 
             var frame = new GameObject("BoardFrame", typeof(SpriteRenderer));
             frame.transform.SetParent(game, false);
 
             var frameRenderer = frame.GetComponent<SpriteRenderer>();
-            frameRenderer.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Frame.png");
+            frameRenderer.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Board/Frame.png");
             frameRenderer.drawMode = SpriteDrawMode.Sliced;      // corners keep their radius at any size
             frameRenderer.color = Well;
             frameRenderer.sortingOrder = -10;
@@ -362,7 +362,7 @@ namespace BlastGame.Game.EditorTools
             var so = new SerializedObject(boardView);
             so.FindProperty("boardFrame").objectReferenceValue = frameRenderer;
             so.FindProperty("boardArea").objectReferenceValue = boardArea;
-            so.FindProperty("cellTile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Cell.png");
+            so.FindProperty("cellTile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Board/Cell.png");
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

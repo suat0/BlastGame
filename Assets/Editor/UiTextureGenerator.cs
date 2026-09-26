@@ -6,13 +6,13 @@ using UnityEngine;
 namespace BlastGame.Game.EditorTools
 {
     // Generates the shapes the board needs behind it. Written as code and dropped into the block
-    // folder on purpose: everything in Assets/Art is packed into BlockAtlas, so the backdrop and the
+    // folder on purpose: everything in Assets/Art/Board is packed into BlockAtlas, so the backdrop and the
     // frame share the blocks' material and the whole game world stays one draw call.
     public static class UiTextureGenerator
     {
-        private const string BackdropPath = "Assets/Art/Backdrop.png";
-        private const string FramePath = "Assets/Art/Frame.png";
-        private const string CellPath = "Assets/Art/Cell.png";
+        private const string BackdropPath = "Assets/Art/Board/Backdrop.png";
+        private const string FramePath = "Assets/Art/Board/Frame.png";
+        private const string CellPath = "Assets/Art/Board/Cell.png";
 
         public static void Generate()
         {

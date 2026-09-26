@@ -21,7 +21,7 @@ namespace BlastGame.Game.EditorTools
         public const string WinPath = Folder + "/Popup_Win.prefab";
         public const string LosePath = Folder + "/Popup_Lose.prefab";
 
-        private const string BoxSpritePath = "Assets/Art/Box0.png";
+        private const string BoxSpritePath = "Assets/Art/Board/Box0.png";
 
         // Match Villains' popup palette: a purple card edged in gold, white headings, green to go on,
         // red to leave.
