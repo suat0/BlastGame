@@ -49,7 +49,10 @@ namespace BlastGame.Game.EditorTools
         private static readonly Dictionary<string, Sheet> Sheets = new Dictionary<string, Sheet>
         {
             ["characters_sheet"] = new Sheet(3, 1, "Characters", "char_count", "char_daughter", "char_butler"),
-            ["poses_sheet"] = new Sheet(3, 1, "Characters", "portrait_count", "char_count_celebrate", "char_butler_sad"),
+            // The generator drew the portrait twice, stacked on the left; the top one is used and the
+            // spare kept under its own name rather than breaking the count.
+            ["poses_sheet"] = new Sheet(3, 1, "Characters",
+                "portrait_count", "portrait_count_alt", "char_count_celebrate", "char_butler_sad"),
             ["ui_sheet"] = new Sheet(4, 3, "UI",
                 "panel_cream", "panel_purple", "pill_dark", "frame_portrait",
                 "header_crest", "ribbon_purple", "ribbon_red", "board_frame",
@@ -72,8 +75,11 @@ namespace BlastGame.Game.EditorTools
             }
 
             int written = 0;
-            foreach (string file in Directory.GetFiles(root, "*.png", SearchOption.AllDirectories))
-                written += Process(file);
+            foreach (string file in Directory.GetFiles(root, "*.*", SearchOption.AllDirectories))
+            {
+                string extension = Path.GetExtension(file).ToLowerInvariant();
+                if (extension == ".png" || extension == ".jpg" || extension == ".jpeg") written += Process(file);
+            }
 
             AssetDatabase.Refresh();
             Debug.Log($"Art processed: {written} sprites written.");
@@ -87,9 +93,13 @@ namespace BlastGame.Game.EditorTools
             var source = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             source.LoadImage(File.ReadAllBytes(file));
 
+            // Opaque, soft and large: JPEG, which is a quarter of the PNG's size here and loses nothing
+            // that survives the texture compression afterwards.
             if (category == "Backgrounds")
             {
-                Write(source, "Backgrounds", name);
+                string directory = Path.Combine(Directory.GetCurrentDirectory(), OutputRoot, "Backgrounds");
+                Directory.CreateDirectory(directory);
+                File.WriteAllBytes(Path.Combine(directory, name + ".jpg"), source.EncodeToJPG(92));
                 return 1;
             }
 
@@ -117,6 +127,14 @@ namespace BlastGame.Game.EditorTools
 
             Color key = KeyColour(pixels, w, h);
 
+            // A black key sits right next to the dark outlines the art is drawn with, so it gets a much
+            // narrower band - and no despill, since a dark fringe on a dark outline is invisible.
+            bool black = key.r + key.g + key.b < 0.3f;
+            float inner = black ? 0.05f : Inner;
+            float outer = black ? 0.14f : Outer;
+
+            EraseGridLines(pixels, w, h, key);
+
             var distance = new float[pixels.Length];
             for (int i = 0; i < pixels.Length; i++) distance[i] = Distance(pixels[i], key);
 
@@ -125,14 +143,14 @@ namespace BlastGame.Game.EditorTools
 
             void Seed(int i)
             {
-                if (background[i] || distance[i] >= Outer) return;
+                if (background[i] || distance[i] >= outer) return;
                 background[i] = true;
                 stack.Push(i);
             }
 
             for (int x = 0; x < w; x++) { Seed(x); Seed((h - 1) * w + x); }
             for (int y = 0; y < h; y++) { Seed(y * w); Seed(y * w + w - 1); }
-            for (int i = 0; i < pixels.Length; i++) if (distance[i] < Inner) Seed(i);
+            for (int i = 0; i < pixels.Length; i++) if (distance[i] < inner) Seed(i);
 
             while (stack.Count > 0)
             {
@@ -149,12 +167,12 @@ namespace BlastGame.Game.EditorTools
             {
                 if (!background[i]) continue;
 
-                float alpha = Mathf.InverseLerp(Inner, Outer, distance[i]);
+                float alpha = Mathf.InverseLerp(inner, outer, distance[i]);
                 Color c = pixels[i];
 
                 // Despill only on this edge band: the key bleeds into antialiased edges, and removing
                 // it from solid pixels would also strip the purple out of a purple coat.
-                if (alpha > 0f) c = Despill(c, key, 1f - alpha);
+                if (alpha > 0f && !black) c = Despill(c, key, 1f - alpha);
 
                 c.a = alpha;
                 pixels[i] = c;
@@ -164,6 +182,61 @@ namespace BlastGame.Game.EditorTools
             result.SetPixels(pixels);
             result.Apply();
             return result;
+        }
+
+        // Some sheets come back ruled into cells with thin grey or white lines running edge to edge.
+        // Left in, they join every shape into one. A line is a row or column that is almost entirely
+        // line-coloured - light and colourless - and its line-coloured pixels, with those of its
+        // immediate neighbours, are painted over with the key.
+        //
+        // Colourless matters: a bright magenta background is light too, and taking brightness alone
+        // turns every mostly-background row into a "line" and paints the faces in it with the key.
+        private static void EraseGridLines(Color[] pixels, int w, int h, Color key)
+        {
+            const float Coverage = 0.85f;
+            const int Spread = 2;   // JPEG smears a one-pixel line over a few
+
+            bool IsLight(Color c) => IsLine(c);
+
+            for (int y = 0; y < h; y++)
+            {
+                int light = 0;
+                for (int x = 0; x < w; x++) if (IsLight(pixels[y * w + x])) light++;
+                if (light < w * Coverage) continue;
+
+                for (int yy = Math.Max(0, y - Spread); yy <= Math.Min(h - 1, y + Spread); yy++)
+                for (int x = 0; x < w; x++)
+                    if (IsLight(pixels[yy * w + x]) || yy != y) Blend(pixels, yy * w + x, key);
+            }
+
+            for (int x = 0; x < w; x++)
+            {
+                int light = 0;
+                for (int y = 0; y < h; y++) if (IsLight(pixels[y * w + x])) light++;
+                if (light < h * Coverage) continue;
+
+                for (int xx = Math.Max(0, x - Spread); xx <= Math.Min(w - 1, x + Spread); xx++)
+                for (int y = 0; y < h; y++)
+                    if (IsLight(pixels[y * w + xx]) || xx != x) Blend(pixels, y * w + xx, key);
+            }
+        }
+
+        // Only colourless pixels are replaced - the line itself, and the dim grey JPEG smears on either
+        // side of it, which are too dark to count as line but belong to it. A neighbour row crossing
+        // an actual shape keeps the shape's coloured pixels.
+        private static void Blend(Color[] pixels, int i, Color key)
+        {
+            Color c = pixels[i];
+            float max = Mathf.Max(c.r, Mathf.Max(c.g, c.b));
+            float min = Mathf.Min(c.r, Mathf.Min(c.g, c.b));
+            if (max - min < 0.12f || Distance(c, key) < 0.2f) pixels[i] = key;
+        }
+
+        private static bool IsLine(Color c)
+        {
+            float max = Mathf.Max(c.r, Mathf.Max(c.g, c.b));
+            float min = Mathf.Min(c.r, Mathf.Min(c.g, c.b));
+            return max > 0.3f && max - min < 0.12f;
         }
 
         private static Color KeyColour(Color[] pixels, int w, int h) =>
@@ -206,8 +279,11 @@ namespace BlastGame.Game.EditorTools
                 return shapes.Count;
             }
 
+            var found = new System.Text.StringBuilder();
+            foreach (RectInt shape in shapes) found.Append($"\n  {shape.width}x{shape.height} at ({shape.x}, {shape.y})");
+
             Debug.LogWarning($"{sheetName}: found {shapes.Count} shapes for {sheet.Names.Length} names; " +
-                             "cutting on the grid instead. Check the results.");
+                             $"cutting on the grid instead. Check the results.{found}");
 
             int cellWidth = image.width / sheet.Columns;
             int cellHeight = image.height / sheet.Rows;
@@ -292,6 +368,39 @@ namespace BlastGame.Game.EditorTools
                     boxes.RemoveAt(j);
                     merged = true;
                 }
+            }
+
+            // Fragments - a coin thrown beside a character, the sparkles around a star, loose bolts
+            // around a lightning ball - join the nearest real shape instead of counting as their own.
+            int largest = 0;
+            foreach (RectInt b in boxes) largest = Math.Max(largest, b.width * b.height);
+
+            float reach = Mathf.Min(w, h) * 0.15f;
+            for (int i = boxes.Count - 1; i >= 0; i--)
+            {
+                RectInt minor = boxes[i];
+                if (minor.width * minor.height >= largest * 0.06f) continue;
+
+                int nearest = -1;
+                float best = reach;
+                for (int j = 0; j < boxes.Count; j++)
+                {
+                    RectInt major = boxes[j];
+                    if (j == i || major.width * major.height < largest * 0.06f) continue;
+
+                    float dx = Mathf.Max(0, Mathf.Max(major.xMin - minor.xMax, minor.xMin - major.xMax));
+                    float dy = Mathf.Max(0, Mathf.Max(major.yMin - minor.yMax, minor.yMin - major.yMax));
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (d < best) { best = d; nearest = j; }
+                }
+
+                if (nearest < 0) continue;
+
+                RectInt target = boxes[nearest];
+                int x0 = Math.Min(target.xMin, minor.xMin), y0 = Math.Min(target.yMin, minor.yMin);
+                int x1 = Math.Max(target.xMax, minor.xMax), y1 = Math.Max(target.yMax, minor.yMax);
+                boxes[nearest] = new RectInt(x0, y0, x1 - x0, y1 - y0);
+                boxes.RemoveAt(i);
             }
 
             // Reading order: rows from the top (texture y grows upwards), then left to right. A shape
