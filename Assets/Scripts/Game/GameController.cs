@@ -1,6 +1,7 @@
 using System;
 using BlastGame.Core;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace BlastGame.Game
 {
@@ -10,7 +11,13 @@ namespace BlastGame.Game
     // Holds no reference to anything that draws; the view and the HUD subscribe to it.
     public sealed class GameController : MonoBehaviour
     {
-        [SerializeField] private LevelConfig level;
+        [Tooltip("Written by the home screen with the campaign level to play. Read once, on start.")]
+        [SerializeField] private LevelRequest request;
+
+        [Tooltip("Played when the scene is opened on its own, with no request from the home screen. " +
+                 "Winning it does not advance the campaign.")]
+        [FormerlySerializedAs("level")]
+        [SerializeField] private LevelConfig debugLevel;
 
         public event Action<Board> OnBoardReady;
 
@@ -25,10 +32,32 @@ namespace BlastGame.Game
 
         public GameSession Session => session;
 
+        public LevelConfig Level { get; private set; }
+
+        // Zero-based campaign position, or -1 for a debug level played straight from this scene.
+        public int CampaignIndex { get; private set; } = -1;
+
+        public bool IsCampaign => CampaignIndex >= 0;
+
         // Start rather than Awake, so every listener has subscribed: Unity runs all of the scene's
         // Awake and OnEnable calls before the first Start.
         private void Start()
         {
+            if (request != null && request.TryTake(out LevelConfig requested, out int index))
+            {
+                Level = requested;
+                CampaignIndex = index;
+            }
+            else
+            {
+                Level = debugLevel;
+                CampaignIndex = -1;
+            }
+
+            if (Level == null) throw new InvalidOperationException("No level requested and no debug level set.");
+
+            LevelConfig level = Level;
+
             var config = new BoardConfig(
                 level.Rows, level.Cols, level.ColorCount,
                 level.ThresholdA, level.ThresholdB, level.ThresholdC,

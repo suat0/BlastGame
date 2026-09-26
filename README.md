@@ -189,7 +189,7 @@ non-ASCII localisation needs a different font strategy.
 ## Running it
 
 1. Open the project in Unity **6000.2.6f2**.
-2. Open `Assets/Scenes/Game.unity` and press Play.
+2. Open `Assets/Scenes/Home.unity` and press Play. `Level.unity` also plays on its own, with the debug level set on its `Game` object.
 
 A level is a ScriptableObject — rows, columns, colour count, the three icon thresholds, Box count,
 move limit and seed. Which one is played is a field on the `Game` object in the scene, so **a new

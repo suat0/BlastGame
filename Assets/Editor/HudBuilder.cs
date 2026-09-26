@@ -18,7 +18,7 @@ namespace BlastGame.Game.EditorTools
     // discovering.
     public static class HudBuilder
     {
-        private const string ScenePath = "Assets/Scenes/Game.unity";
+        private const string ScenePath = "Assets/Scenes/Level.unity";
         private const string FontPath = "Assets/Fonts/Baloo2-ExtraBold SDF.asset";
         private const string BoxSpritePath = "Assets/Art/Box0.png";
 
