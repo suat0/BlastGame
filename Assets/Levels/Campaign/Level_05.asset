@@ -18,7 +18,7 @@ MonoBehaviour:
   thresholdA: 4
   thresholdB: 7
   thresholdC: 9
-  boxCount: 14
-  moveLimit: 22
-  seed: 1005
+  boxCount: 9
+  moveLimit: 35
+  seed: 5153
   isHard: 1

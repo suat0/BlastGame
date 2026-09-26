@@ -27,23 +27,31 @@ namespace BlastGame.Game.EditorTools
         }
 
         // A sawtooth rather than a ramp: difficulty climbs, peaks on a Hard level every fifth, then
-        // relaxes, which is the shape the genre uses. Seeds are fixed so the first attempt at a level
-        // is always the same board; retries continue the same random stream and differ.
-        // First-guess numbers, to be tuned against the bot's measured pass rate.
+        // relaxes, which is the shape the genre uses. The numbers are measured, not guessed: a bot that
+        // plays at the Boxes, with one move in five random, played every row a few thousand times and
+        // these are the smallest move limits that reach each target pass rate with as many Boxes as
+        // that allows - the goal is what the player looks at, so a level carries as much of it as it
+        // can. Colour count is the main lever: every extra colour shrinks the groups and starves the
+        // Boxes of neighbours.
+        //
+        // Each seed is the one of two hundred whose fixed first board plays closest to the level's
+        // average, so the first attempt is typical of the level rather than lucky or cruel.
+        //
+        //                rows cols  K  box  mv  seed        target  measured
         private static readonly Row[] Levels =
         {
-            new Row( 7,  7, 4,  5, 20, 1001),
-            new Row( 8,  7, 4,  7, 20, 1002),
-            new Row( 8,  8, 5,  8, 22, 1003),
-            new Row( 8,  8, 5, 10, 22, 1004),
-            new Row( 9,  8, 5, 14, 22, 1005, hard: true),
-            new Row( 9,  9, 5, 12, 24, 1006),
-            new Row( 9,  9, 6, 12, 25, 1007),
-            new Row(10,  9, 6, 14, 26, 1008),
-            new Row(10, 10, 6, 14, 26, 1009),
-            new Row(10, 10, 6, 20, 26, 1010, hard: true),
-            new Row(10, 10, 6, 18, 28, 1011),
-            new Row(10, 10, 6, 20, 28, 1012),
+            new Row( 7,  7, 3, 20, 34,  1025),                // 98%   97%
+            new Row( 8,  7, 3, 20, 33,  2019),                // 97%   96%
+            new Row( 8,  8, 3, 21, 35,  3048),                // 96%   95%
+            new Row( 8,  8, 4,  6, 35,  4118),                // 90%   90%
+            new Row( 9,  8, 5,  9, 35,  5153, hard: true),    // 55%   50%
+            new Row( 9,  9, 4,  7, 30,  6020),                // 80%   80%
+            new Row( 9,  9, 4, 10, 34,  7053),                // 77%   74%
+            new Row(10,  9, 4, 11, 34,  8138),                // 73%   71%
+            new Row(10, 10, 4, 11, 34,  9040),                // 70%   69%
+            new Row(10, 10, 5,  7, 32, 10007, hard: true),    // 55%   53%
+            new Row(10, 10, 4, 12, 35, 11100),                // 68%   67%
+            new Row(10, 10, 4, 12, 35, 12045),                // 65%   67%
         };
 
         // Example 1's thresholds from the case document, on every campaign level. They are what the

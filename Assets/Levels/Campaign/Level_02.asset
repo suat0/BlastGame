@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: BlastGame.Game::BlastGame.Game.LevelConfig
   rows: 8
   cols: 7
-  colorCount: 4
+  colorCount: 3
   thresholdA: 4
   thresholdB: 7
   thresholdC: 9
-  boxCount: 7
-  moveLimit: 20
-  seed: 1002
+  boxCount: 20
+  moveLimit: 33
+  seed: 2019
   isHard: 0
