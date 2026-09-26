@@ -238,6 +238,7 @@ namespace BlastGame.Game
         {
             if (blockAt[cell] == null) return;
             effectRunner.Wiggle(blockAt[cell], rejectedWiggle, rejectedWiggleDuration);
+            Sfx.Play(SfxId.Reject);
         }
 
         private void HandleDeadlockResolved() => BeginShuffleAnimation();
@@ -330,6 +331,11 @@ namespace BlastGame.Game
             if (board == null) throw new InvalidOperationException("ApplyBlast before Bind.");
 
             BurstBlast(result);
+
+            // Lower for a bigger group: a big blast should sound heavier, not squeakier.
+            int size = result.BlastedGroupSize;
+            Sfx.Play(SfxId.Blast, Mathf.Lerp(1.15f, 0.85f, Mathf.InverseLerp(2f, 12f, size)));
+            if (result.Removed.Length >= shakeBlastThreshold) Sfx.Play(SfxId.BlastBig);
 
             ReleaseBlocksAt(result.Removed, shardsPerBlock);
 
@@ -476,6 +482,8 @@ namespace BlastGame.Game
         private void BurstBoxes(BlastResult result)
         {
             ReadOnlySpan<int> damaged = result.DamagedBoxes;
+            if (damaged.Length > 0) Sfx.Play(SfxId.BoxHit);
+            if (result.BrokenBoxes.Length > 0) Sfx.Play(SfxId.BoxBreak);
             for (int i = 0; i < damaged.Length; i++)
             {
                 int cell = damaged[i];
@@ -647,6 +655,7 @@ namespace BlastGame.Game
         // unit meaning one cell, and a child under a zero-scaled parent is a division by zero.
         private void BeginShuffleAnimation()
         {
+            Sfx.Play(SfxId.Shuffle);
             HideHint();
 
             // Landing squashes from the move that caused the shuffle are still running, and the
@@ -686,8 +695,11 @@ namespace BlastGame.Game
 
         // The animator has already released the cell, so the block is settled and tappable while this
         // runs. Impact feedback must never cost a tap.
-        private void HandleBlockLanded(BlockView block) =>
+        private void HandleBlockLanded(BlockView block)
+        {
             effectRunner.Squash(block, landingSquash, landingSquashDuration);
+            Sfx.Play(SfxId.Land);
+        }
 
         private void SetAllBlockScales(float scale)
         {

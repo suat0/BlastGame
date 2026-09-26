@@ -151,6 +151,7 @@ namespace BlastGame.Game.UI
 
             inFlight--;
             ShowObjective();
+            Sfx.Play(SfxId.Collect);
 
             Tween.StopAll(objectiveIcon);
             objectiveIcon.localScale = Vector3.one;
@@ -168,6 +169,7 @@ namespace BlastGame.Game.UI
             label.localScale = Vector3.one;
 
             movesLabel.color = low ? lowMovesColor : movesColor;
+            if (low) Sfx.Play(SfxId.LowMoves);
             if (low) Tween.Scale(label, 1.15f, 0.35f, Ease.InOutSine, cycles: -1, cycleMode: CycleMode.Yoyo);
         }
     }

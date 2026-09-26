@@ -11,6 +11,7 @@ namespace BlastGame.Game
         {
             remaining = Flow.IntroDuration;
             Flow.BoardView.DropIn();
+            Sfx.Play(SfxId.LevelStart);
             Flow.IntroBanner.Play(Flow.Controller.Session.RemainingBoxes, Flow.IntroDuration * 0.6f);
         }
 

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace BlastGame.Game
 {
-    // The one object that lives across scenes: the scene transition now, the audio service later.
+    // The one object that lives across scenes: the scene transition and the audio.
     //
     // Created before the first scene loads rather than placed in one, so every scene can be opened and
     // played on its own in the editor and still find it. A copy placed in a scene would need a
@@ -26,6 +26,8 @@ namespace BlastGame.Game
 
         public SceneTransition Transition => transition;
 
+        public AudioService Audio { get; private set; }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Create()
         {
@@ -43,6 +45,8 @@ namespace BlastGame.Game
 
         private void Awake()
         {
+            Audio = GetComponent<AudioService>();
+
             Application.targetFrameRate = targetFrameRate;
             PrimeTweenConfig.SetTweensCapacity(tweenCapacity);
         }

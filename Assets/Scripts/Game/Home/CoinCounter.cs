@@ -79,6 +79,7 @@ namespace BlastGame.Game.UI
             landed++;
 
             shown = landed == flying ? target : shown + perCoin;
+            Sfx.Play(SfxId.CoinLand, 1f + 0.04f * landed);   // climbing as the coins pile up
             label.SetText("{0:0}", shown);
 
             Tween.StopAll(icon);

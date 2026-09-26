@@ -33,6 +33,7 @@ namespace BlastGame.Game.UI
 
             IsOpen = true;
             gameObject.SetActive(true);
+            Sfx.Play(SfxId.PopupOpen);
 
             // Taps behind an open popup are swallowed by the dim; buttons on a popup still animating in
             // already work, because waiting for the entrance before accepting a tap feels unresponsive.

@@ -6,7 +6,11 @@ namespace BlastGame.Game
     {
         public LostState(LevelFlow flow) : base(flow) { }
 
-        public override void Enter() => Flow.LosePopup.Show();
+        public override void Enter()
+        {
+            Flow.LosePopup.Show();
+            Sfx.Play(SfxId.Lose);
+        }
 
         public override void Exit() => Flow.LosePopup.Hide();
 

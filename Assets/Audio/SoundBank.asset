@@ -1,0 +1,170 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81556c56e946d4d8da2d0ce1c2a451d3, type: 3}
+  m_Name: SoundBank
+  m_EditorClassIdentifier: BlastGame.Game::BlastGame.Game.SoundBank
+  entries:
+  - id: 0
+    clips:
+    - {fileID: 8300000, guid: f2730cb27c2464c04bd5ed34c0d8799f, type: 3}
+    - {fileID: 8300000, guid: ad3e95eed4d2b4c7d9da88c605c2d713, type: 3}
+    - {fileID: 8300000, guid: 358b0ff5346874ff3968adae877214e4, type: 3}
+    volume: 0.75
+    pitchVariance: 0.04
+    maxVoices: 2
+    cooldown: 0.04
+    ducksMusic: 0
+  - id: 1
+    clips:
+    - {fileID: 8300000, guid: e27d921b9a76c4f868a3c8fbb19a8063, type: 3}
+    - {fileID: 8300000, guid: 02e5e2d3ff51243f19f4aa71e8a36d7d, type: 3}
+    - {fileID: 8300000, guid: 648af6e614db2467ca5bf520ab80b02a, type: 3}
+    volume: 0.45
+    pitchVariance: 0.05
+    maxVoices: 1
+    cooldown: 0.1
+    ducksMusic: 0
+  - id: 2
+    clips:
+    - {fileID: 8300000, guid: 56b6b677198714a5a962fa18fc2400f7, type: 3}
+    - {fileID: 8300000, guid: 04532dd91131b4c03bf5d006e62dd5fe, type: 3}
+    - {fileID: 8300000, guid: d63fcbe28f1774805baf8f38074a9e6e, type: 3}
+    volume: 0.18
+    pitchVariance: 0.1
+    maxVoices: 3
+    cooldown: 0.05
+    ducksMusic: 0
+  - id: 3
+    clips:
+    - {fileID: 8300000, guid: 95c499cbd406943dbae98e879c991701, type: 3}
+    - {fileID: 8300000, guid: 0f9c8da8d4cc24b28b4bfa8eca1b6b65, type: 3}
+    volume: 0.5
+    pitchVariance: 0.03
+    maxVoices: 1
+    cooldown: 0.1
+    ducksMusic: 0
+  - id: 4
+    clips:
+    - {fileID: 8300000, guid: 4299b36f6bb244db4832c6800ff1d679, type: 3}
+    - {fileID: 8300000, guid: 9910e34ec92ee453abbc4cb96fd4e881, type: 3}
+    - {fileID: 8300000, guid: 0cfba8d6790ee4f9594a3025042ad46d, type: 3}
+    volume: 0.6
+    pitchVariance: 0.06
+    maxVoices: 2
+    cooldown: 0.05
+    ducksMusic: 0
+  - id: 5
+    clips:
+    - {fileID: 8300000, guid: ea3073277d0d948369e29fa76a0f2ed7, type: 3}
+    - {fileID: 8300000, guid: 7da28e49f51d746e8af2ec7064d8d5b3, type: 3}
+    - {fileID: 8300000, guid: ce0f15c812ff54f6fa4a8fa060fc0870, type: 3}
+    - {fileID: 8300000, guid: e642bdb5105c6451f8e3a82c77fa840b, type: 3}
+    volume: 0.75
+    pitchVariance: 0.05
+    maxVoices: 2
+    cooldown: 0.05
+    ducksMusic: 0
+  - id: 6
+    clips:
+    - {fileID: 8300000, guid: 83e8a7701078845eebcd2aa060d05f34, type: 3}
+    - {fileID: 8300000, guid: 5cf2d7f9a98c94ab894c8b5653e5c328, type: 3}
+    - {fileID: 8300000, guid: 0316d6d5ca3a94d3cad790888dfb9e02, type: 3}
+    volume: 0.45
+    pitchVariance: 0.04
+    maxVoices: 3
+    cooldown: 0.05
+    ducksMusic: 0
+  - id: 7
+    clips:
+    - {fileID: 8300000, guid: e8dc26cf5ff4d4ba49b062dff4a5b2dc, type: 3}
+    volume: 0.6
+    pitchVariance: 0
+    maxVoices: 1
+    cooldown: 0.2
+    ducksMusic: 0
+  - id: 8
+    clips:
+    - {fileID: 8300000, guid: 83c3461768ba8427f84f49e0a2e1d8d8, type: 3}
+    volume: 0.55
+    pitchVariance: 0
+    maxVoices: 1
+    cooldown: 1
+    ducksMusic: 0
+  - id: 9
+    clips:
+    - {fileID: 8300000, guid: 013356183eec743b2acabf803851af68, type: 3}
+    - {fileID: 8300000, guid: fc8be01d6b03a4aeb830cf9ff96707a4, type: 3}
+    volume: 0.7
+    pitchVariance: 0
+    maxVoices: 1
+    cooldown: 0.3
+    ducksMusic: 0
+  - id: 10
+    clips:
+    - {fileID: 8300000, guid: 9c287548171294b859650c20cf329e53, type: 3}
+    volume: 0.65
+    pitchVariance: 0
+    maxVoices: 1
+    cooldown: 0.5
+    ducksMusic: 1
+  - id: 11
+    clips:
+    - {fileID: 8300000, guid: 0b1040b3ebb2c401ea29e32a1a04ed6e, type: 3}
+    volume: 0.8
+    pitchVariance: 0
+    maxVoices: 1
+    cooldown: 0.5
+    ducksMusic: 1
+  - id: 12
+    clips:
+    - {fileID: 8300000, guid: 7aa6369f7ea1f4e24b37308439f3d453, type: 3}
+    volume: 0.7
+    pitchVariance: 0
+    maxVoices: 1
+    cooldown: 0.5
+    ducksMusic: 1
+  - id: 13
+    clips:
+    - {fileID: 8300000, guid: da98277fde24340dc9f4d307f1ed20aa, type: 3}
+    volume: 0.5
+    pitchVariance: 0.03
+    maxVoices: 2
+    cooldown: 0.03
+    ducksMusic: 0
+  - id: 14
+    clips:
+    - {fileID: 8300000, guid: 18dbd7782301b442fa7eab782f958056, type: 3}
+    volume: 0.45
+    pitchVariance: 0
+    maxVoices: 1
+    cooldown: 0.1
+    ducksMusic: 0
+  - id: 15
+    clips:
+    - {fileID: 8300000, guid: 6a9685c9498f8409ca57dbc6faeaa37e, type: 3}
+    volume: 0.4
+    pitchVariance: 0
+    maxVoices: 1
+    cooldown: 0.2
+    ducksMusic: 0
+  - id: 16
+    clips:
+    - {fileID: 8300000, guid: 5e18929b34c564b518d281782ad0ed2f, type: 3}
+    - {fileID: 8300000, guid: ed824d02574284a00bc2d6c73f86cd03, type: 3}
+    - {fileID: 8300000, guid: 816c55405dddf4c8ca343c218f5dc008, type: 3}
+    volume: 0.45
+    pitchVariance: 0.02
+    maxVoices: 3
+    cooldown: 0.03
+    ducksMusic: 0
+  homeMusic: {fileID: 8300000, guid: 1afbc3ed2e3604239b6e099805412dbe, type: 3}
+  levelMusic: {fileID: 8300000, guid: e2863b28e9aed48019b54b076662027f, type: 3}

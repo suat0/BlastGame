@@ -136,6 +136,7 @@ namespace BlastGame.Game.UI
             Tween.StopAll(comboLabel);
 
             comboLabel.text = word;
+            Sfx.Play(SfxId.Combo);
             comboLabel.alpha = 1f;
             comboLabel.gameObject.SetActive(true);
 

@@ -17,6 +17,7 @@ namespace BlastGame.Game
             untilCard = Flow.CelebrationDuration;
 
             Flow.Feedback.Flash();
+            Sfx.Play(SfxId.Win);
             Flow.BoardView.Celebrate();
         }
 

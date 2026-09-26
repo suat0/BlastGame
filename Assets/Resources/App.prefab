@@ -191,6 +191,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4783162364532758350}
   - component: {fileID: 2107234701952565067}
+  - component: {fileID: 3221333821111682744}
   m_Layer: 0
   m_Name: App
   m_TagString: Untagged
@@ -229,3 +230,20 @@ MonoBehaviour:
   transition: {fileID: 5125609068085921698}
   targetFrameRate: 60
   tweenCapacity: 256
+--- !u!114 &3221333821111682744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6032815514741823344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0aff78620f3c42a4bfcd8bf7f6e6a83, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BlastGame.Game::BlastGame.Game.AudioService
+  bank: {fileID: 11400000, guid: e45de8ea16cdc4133831d42014f1a88a, type: 2}
+  voices: 10
+  musicVolume: 0.5
+  musicFade: 0.8
+  duckLevel: 0.25

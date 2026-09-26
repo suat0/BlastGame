@@ -39,6 +39,7 @@ namespace BlastGame.Game.UI
 
             Tween.ShakeLocalRotation(transform, new Vector3(0f, 0f, 12f), 0.35f, frequency: 14f, useUnscaledTime: true);
             toast.Show(message);
+            Sfx.Play(SfxId.Locked);
         }
     }
 }
