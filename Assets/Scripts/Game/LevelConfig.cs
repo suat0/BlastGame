@@ -32,6 +32,11 @@ namespace BlastGame.Game
         [SerializeField] private int moveLimit = 20;
         [SerializeField] private int seed = 0;
 
+        [Header("Presentation")]
+        [Tooltip("Shown as a red 'Hard' ribbon before the level starts. A label only - the difficulty " +
+                 "itself comes from the numbers above.")]
+        [SerializeField] private bool isHard;
+
         // Read-only: a ScriptableObject is one shared asset, and a runtime write persists in the editor.
         public int Rows => rows;
         public int Cols => cols;
@@ -46,6 +51,8 @@ namespace BlastGame.Game
         public int MoveLimit => moveLimit;   // zero means unlimited
 
         public int Seed => seed;             // zero means a fresh random board each session
+
+        public bool IsHard => isHard;
 
 #if UNITY_EDITOR
         // Range only guards the sliders; presets, scripted edits and Reset bypass it. This enforces.

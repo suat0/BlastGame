@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 557001f3669214d5cbdeed54cdb09cc6, type: 3}
+  m_Name: LevelCatalog
+  m_EditorClassIdentifier: BlastGame.Game::BlastGame.Game.LevelCatalog
+  levels:
+  - {fileID: 11400000, guid: b2c6113643b7b47e5915844f96b900cd, type: 2}
+  - {fileID: 11400000, guid: aabdef3caf7cb44728bc8d3c171f7c88, type: 2}
+  - {fileID: 11400000, guid: c8effbcc199a34ec995a7eea152f8062, type: 2}
+  - {fileID: 11400000, guid: d8738c9a24724401b86098a4288b759e, type: 2}
+  - {fileID: 11400000, guid: ef168460cdc0c44c4be0d0c5e5e11995, type: 2}
+  - {fileID: 11400000, guid: 7aa68bfd688d94ee18f7d422b94bc435, type: 2}
+  - {fileID: 11400000, guid: 058583c35568e4ec19c07529efe9c2a6, type: 2}
+  - {fileID: 11400000, guid: c4a65a4e914584aebb65aa8aca537fbb, type: 2}
+  - {fileID: 11400000, guid: a64cc6d4dacb04de69bbf09ddb810a24, type: 2}
+  - {fileID: 11400000, guid: 50daf13026b0744e59ce4d71c9c6e10f, type: 2}
+  - {fileID: 11400000, guid: 2964d97ab90154e978520871b9a42dda, type: 2}
+  - {fileID: 11400000, guid: 304af587c03c24b808a25789b1847356, type: 2}
+  loopTail: 4
