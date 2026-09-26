@@ -160,7 +160,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      event_bankrob_0: 7989129792507202572
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
