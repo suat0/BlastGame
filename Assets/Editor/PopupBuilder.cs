@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace BlastGame.Game.EditorTools
 {
-    // Builds the five popups as prefabs, so the start popup can sit in both scenes and every popup
+    // Builds the popups as prefabs, so the start popup can sit in both scenes and every popup
     // has one definition. A scaffold like the others: flat colour panels until the generated art
     // replaces them, then retired.
     public static class PopupBuilder
@@ -16,7 +16,8 @@ namespace BlastGame.Game.EditorTools
 
         public const string LevelStartPath = Folder + "/Popup_LevelStart.prefab";
         public const string PausePath = Folder + "/Popup_Pause.prefab";
-        public const string ConfirmExitPath = Folder + "/Popup_ConfirmExit.prefab";
+        public const string SettingsPath = Folder + "/Popup_Settings.prefab";
+        public const string ConfirmPath = Folder + "/Popup_Confirm.prefab";
         public const string WinPath = Folder + "/Popup_Win.prefab";
         public const string LosePath = Folder + "/Popup_Lose.prefab";
 
@@ -43,8 +44,10 @@ namespace BlastGame.Game.EditorTools
             if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/Prefabs", "UI");
 
             BuildLevelStart();
-            BuildPause();
-            BuildConfirmExit();
+            // The same settings popup twice, differing in the one way out: a level leaves, home resets.
+            BuildSettings(PausePath, "Popup_Pause", "Leave level");
+            BuildSettings(SettingsPath, "Popup_Settings", "Reset progress");
+            BuildConfirm();
             BuildWin();
             BuildLose();
 
@@ -94,44 +97,47 @@ namespace BlastGame.Game.EditorTools
             Save(root, LevelStartPath);
         }
 
-        private static void BuildPause()
+        private static void BuildSettings(string path, string name, string action)
         {
-            GameObject root = Shell<PausePopup>("Popup_Pause", new Vector2(820f, 860f), out RectTransform card);
+            GameObject root = Shell<SettingsPopup>(name, new Vector2(820f, 860f), out RectTransform card);
 
             Heading1(card, "Settings", -70f);
 
             Button music = Wide(card, "MusicButton", "Music: On", PurpleFace, PurpleShade, 170f);
             Button sfx = Wide(card, "SfxButton", "Sound: On", PurpleFace, PurpleShade, -20f);
-            Button leave = Wide(card, "LeaveButton", "Leave level", RedFace, RedShade, -260f);
-            Button resume = CloseButton(card);
+            Button actionButton = Wide(card, "ActionButton", action, RedFace, RedShade, -260f);
+            Button close = CloseButton(card);
 
-            Wire(root, ("resumeButton", resume), ("leaveButton", leave), ("musicButton", music), ("sfxButton", sfx),
+            Wire(root, ("closeButton", close), ("actionButton", actionButton), ("musicButton", music), ("sfxButton", sfx),
                  ("musicLabel", music.GetComponentInChildren<TMP_Text>()),
                  ("sfxLabel", sfx.GetComponentInChildren<TMP_Text>()));
 
-            Save(root, PausePath);
+            Save(root, path);
         }
 
-        private static void BuildConfirmExit()
+        private static void BuildConfirm()
         {
-            GameObject root = Shell<ConfirmExitPopup>("Popup_ConfirmExit", new Vector2(820f, 620f), out RectTransform card);
+            GameObject root = Shell<ConfirmPopup>("Popup_Confirm", new Vector2(820f, 620f), out RectTransform card);
 
-            Heading1(card, "Leave level?", -70f);
+            TMP_Text title = Heading1(card, "Are you sure?", -70f);
 
-            TMP_Text body = UiBuild.Text("Body", card, "Your progress in this level will be lost.", 52f, Body,
+            TMP_Text body = UiBuild.Text("Body", card, "This cannot be undone.", 52f, Body,
                                          TextAlignmentOptions.Center);
             Place(body.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(700f, 150f), new Vector2(0f, 30f));
 
-            Button leave = UiBuild.CreateButton("LeaveButton", card, new Vector2(330f, 160f), Vector2.zero,
-                                                RedFace, RedShade, "Leave", 72f, Heading);
-            Place((RectTransform)leave.transform, new Vector2(0.5f, 0f), new Vector2(330f, 160f), new Vector2(-185f, 130f));
+            Button confirm = UiBuild.CreateButton("ConfirmButton", card, new Vector2(330f, 160f), Vector2.zero,
+                                                  RedFace, RedShade, "Yes", 72f, Heading);
+            Place((RectTransform)confirm.transform, new Vector2(0.5f, 0f), new Vector2(330f, 160f), new Vector2(-185f, 130f));
 
-            Button stay = UiBuild.CreateButton("StayButton", card, new Vector2(330f, 160f), Vector2.zero,
-                                               GreenFace, GreenShade, "Stay", 72f, Heading);
-            Place((RectTransform)stay.transform, new Vector2(0.5f, 0f), new Vector2(330f, 160f), new Vector2(185f, 130f));
+            // Cancel on the right and in green: the safe choice is the one the thumb finds first.
+            Button cancel = UiBuild.CreateButton("CancelButton", card, new Vector2(330f, 160f), Vector2.zero,
+                                                 GreenFace, GreenShade, "Stay", 72f, Heading);
+            Place((RectTransform)cancel.transform, new Vector2(0.5f, 0f), new Vector2(330f, 160f), new Vector2(185f, 130f));
 
-            Wire(root, ("leaveButton", leave), ("stayButton", stay));
-            Save(root, ConfirmExitPath);
+            Wire(root, ("titleLabel", title), ("bodyLabel", body),
+                 ("confirmLabel", confirm.GetComponentInChildren<TMP_Text>()),
+                 ("confirmButton", confirm), ("cancelButton", cancel));
+            Save(root, ConfirmPath);
         }
 
         private static void BuildWin()
@@ -212,6 +218,12 @@ namespace BlastGame.Game.EditorTools
         {
             TMP_Text text = UiBuild.Text("Title", card, content, 100f, Heading, TextAlignmentOptions.Center);
             Place(text.rectTransform, new Vector2(0.5f, 1f), new Vector2(760f, 140f), new Vector2(0f, y));
+
+            // One line, shrunk to fit: a heading that wraps climbs out of the top of its card.
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.enableAutoSizing = true;
+            text.fontSizeMin = 56f;
+            text.fontSizeMax = 100f;
             return text;
         }
 

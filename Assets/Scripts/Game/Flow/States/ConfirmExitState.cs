@@ -5,7 +5,8 @@ namespace BlastGame.Game
     {
         public ConfirmExitState(LevelFlow flow) : base(flow) { }
 
-        public override void Enter() => Flow.ConfirmExitPopup.Show();
+        public override void Enter() =>
+            Flow.ConfirmExitPopup.Show("Leave level?", "Your progress in this level will be lost.", "Leave");
 
         public override void Exit() => Flow.ConfirmExitPopup.Hide();
 

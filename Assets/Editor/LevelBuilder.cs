@@ -83,8 +83,8 @@ namespace BlastGame.Game.EditorTools
             IntroBanner banner = BuildIntroBanner(root);
 
             var start = Instantiate<LevelStartPopup>(PopupBuilder.LevelStartPath, root);
-            var pause = Instantiate<PausePopup>(PopupBuilder.PausePath, root);
-            var confirm = Instantiate<ConfirmExitPopup>(PopupBuilder.ConfirmExitPath, root);
+            var pause = Instantiate<SettingsPopup>(PopupBuilder.PausePath, root);
+            var confirm = Instantiate<ConfirmPopup>(PopupBuilder.ConfirmPath, root);
             var win = Instantiate<WinPopup>(PopupBuilder.WinPath, root);
             var lose = Instantiate<LosePopup>(PopupBuilder.LosePath, root);
 

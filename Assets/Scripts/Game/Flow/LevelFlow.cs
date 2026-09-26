@@ -23,8 +23,8 @@ namespace BlastGame.Game
         [SerializeField] private Button settingsButton;
         [SerializeField] private IntroBanner introBanner;
         [SerializeField] private LevelStartPopup startPopup;
-        [SerializeField] private PausePopup pausePopup;
-        [SerializeField] private ConfirmExitPopup confirmExitPopup;
+        [SerializeField] private SettingsPopup pausePopup;
+        [SerializeField] private ConfirmPopup confirmExitPopup;
         [SerializeField] private WinPopup winPopup;
         [SerializeField] private LosePopup losePopup;
 
@@ -46,8 +46,8 @@ namespace BlastGame.Game
         public BoardView BoardView => boardView;
         public IntroBanner IntroBanner => introBanner;
         public LevelStartPopup StartPopup => startPopup;
-        public PausePopup PausePopup => pausePopup;
-        public ConfirmExitPopup ConfirmExitPopup => confirmExitPopup;
+        public SettingsPopup PausePopup => pausePopup;
+        public ConfirmPopup ConfirmExitPopup => confirmExitPopup;
         public WinPopup WinPopup => winPopup;
         public LosePopup LosePopup => losePopup;
 
@@ -98,10 +98,10 @@ namespace BlastGame.Game
 
             startPopup.PlayButton.onClick.AddListener(HandleStartPlayClicked);
             startPopup.CloseButton.onClick.AddListener(HandleStartCloseClicked);
-            pausePopup.ResumeButton.onClick.AddListener(HandleResumeClicked);
-            pausePopup.LeaveButton.onClick.AddListener(HandleLeaveClicked);
-            confirmExitPopup.LeaveButton.onClick.AddListener(HandleConfirmLeaveClicked);
-            confirmExitPopup.StayButton.onClick.AddListener(HandleConfirmStayClicked);
+            pausePopup.CloseButton.onClick.AddListener(HandleResumeClicked);
+            pausePopup.ActionButton.onClick.AddListener(HandleLeaveClicked);
+            confirmExitPopup.ConfirmButton.onClick.AddListener(HandleConfirmLeaveClicked);
+            confirmExitPopup.CancelButton.onClick.AddListener(HandleConfirmStayClicked);
             winPopup.ContinueButton.onClick.AddListener(HandleContinueClicked);
             losePopup.RetryButton.onClick.AddListener(HandleRetryClicked);
             losePopup.HomeButton.onClick.AddListener(HandleLoseHomeClicked);
@@ -116,10 +116,10 @@ namespace BlastGame.Game
 
             startPopup.PlayButton.onClick.RemoveListener(HandleStartPlayClicked);
             startPopup.CloseButton.onClick.RemoveListener(HandleStartCloseClicked);
-            pausePopup.ResumeButton.onClick.RemoveListener(HandleResumeClicked);
-            pausePopup.LeaveButton.onClick.RemoveListener(HandleLeaveClicked);
-            confirmExitPopup.LeaveButton.onClick.RemoveListener(HandleConfirmLeaveClicked);
-            confirmExitPopup.StayButton.onClick.RemoveListener(HandleConfirmStayClicked);
+            pausePopup.CloseButton.onClick.RemoveListener(HandleResumeClicked);
+            pausePopup.ActionButton.onClick.RemoveListener(HandleLeaveClicked);
+            confirmExitPopup.ConfirmButton.onClick.RemoveListener(HandleConfirmLeaveClicked);
+            confirmExitPopup.CancelButton.onClick.RemoveListener(HandleConfirmStayClicked);
             winPopup.ContinueButton.onClick.RemoveListener(HandleContinueClicked);
             losePopup.RetryButton.onClick.RemoveListener(HandleRetryClicked);
             losePopup.HomeButton.onClick.RemoveListener(HandleLoseHomeClicked);

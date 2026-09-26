@@ -4,18 +4,21 @@ using UnityEngine.UI;
 
 namespace BlastGame.Game.UI
 {
-    // Settings inside a level: sound switches, back to the board, or out to the home screen.
-    public sealed class PausePopup : Popup
+    // Sound switches plus one way out, which differs by screen: in a level it is "Leave level", on the
+    // home screen "Reset progress". A popup built without one simply has no such button.
+    public sealed class SettingsPopup : Popup
     {
-        [SerializeField] private Button resumeButton;
-        [SerializeField] private Button leaveButton;
+        [SerializeField] private Button closeButton;
         [SerializeField] private Button musicButton;
         [SerializeField] private Button sfxButton;
         [SerializeField] private TMP_Text musicLabel;
         [SerializeField] private TMP_Text sfxLabel;
 
-        public Button ResumeButton => resumeButton;
-        public Button LeaveButton => leaveButton;
+        [Tooltip("The screen-specific action. Optional.")]
+        [SerializeField] private Button actionButton;
+
+        public Button CloseButton => closeButton;
+        public Button ActionButton => actionButton;
 
         private void OnEnable()
         {
@@ -30,8 +33,8 @@ namespace BlastGame.Game.UI
             sfxButton.onClick.RemoveListener(HandleSfxClicked);
         }
 
-        // The switches write the save directly: they are settings, not part of the level, and there is
-        // nothing for the level's states to decide about them.
+        // The switches write the save directly: they are settings, not part of a level, and there is
+        // nothing for any state to decide about them.
         private void HandleMusicClicked()
         {
             PlayerProgress.MusicOn = !PlayerProgress.MusicOn;
