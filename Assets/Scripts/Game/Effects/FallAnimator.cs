@@ -50,6 +50,10 @@ namespace BlastGame.Game
         // animation, so Core neither knows nor should know it.
         public bool IsSettled(int cell) => entryOfCell[cell] < 0;
 
+        // Nothing in the air anywhere. The level waits on this before it announces a win or a loss,
+        // which Core knew the moment the last move was made.
+        public bool IsIdle => count == 0;
+
         public void Begin(BlockView block, Vector3 from, Vector3 to, int targetCell)
         {
             if (block == null) throw new ArgumentNullException(nameof(block));

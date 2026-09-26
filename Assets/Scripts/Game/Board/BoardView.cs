@@ -123,6 +123,10 @@ namespace BlastGame.Game
 
         private bool IsShuffling => shuffleElapsed >= 0f;
 
+        // True once every block has landed and no shuffle is playing: the board looks like the board
+        // Core already has.
+        public bool IsIdle => fallAnimator == null || (fallAnimator.IsIdle && !IsShuffling);
+
         // OnEnable/OnDisable rather than Start/OnDestroy, and named methods rather than lambdas. An
         // object disabled and re-enabled would otherwise subscribe twice, and a lambda cannot be
         // unsubscribed at all.
