@@ -38,22 +38,20 @@ namespace BlastGame.Game.EditorTools
         {
             Sprite(importer, 2048, "ASTC_4x4");
 
-            // Panels, pills, ribbons and buttons stretch; icons do not. A fresh stretchable sprite gets
+            // Panels, pills and buttons stretch; icons and ribbons do not. A fresh stretchable sprite gets
             // a border of a third of its shorter side, which suits a rounded panel, until someone
             // tunes it.
             string name = System.IO.Path.GetFileNameWithoutExtension(assetPath);
+            // Ribbons are not in the list: their curve is the shape, and slicing stretches it flat.
             bool stretches = name.StartsWith("panel_") || name.StartsWith("pill_") || name.StartsWith("btn_") ||
-                             name.StartsWith("ribbon_") || name.StartsWith("nav_") || name.StartsWith("board_frame");
+                             name.StartsWith("nav_") || name.StartsWith("board_frame");
 
             if (!stretches || importer.spriteBorder != Vector4.zero) return;
 
             importer.GetSourceTextureWidthAndHeight(out int width, out int height);
             float border = Mathf.Min(width, height) / 3f;
 
-            // Ribbons stretch sideways only: their ends are the shape, their middle is plain.
-            importer.spriteBorder = name.StartsWith("ribbon_")
-                ? new Vector4(width / 3f, 0f, width / 3f, 0f)
-                : new Vector4(border, border, border, border);
+            importer.spriteBorder = new Vector4(border, border, border, border);
         }
 
         // Generated board art: a sprite on the board, nine-sliced, at a density that makes its border

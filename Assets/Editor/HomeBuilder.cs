@@ -208,7 +208,8 @@ namespace BlastGame.Game.EditorTools
             Button button = UiBuild.ArtButton("LevelButton", safe, UiBuild.Art("btn_green"), new Vector2(640f, 220f), "Level 1", 110f);
             UiBuild.Place((RectTransform)button.transform, new Vector2(0.5f, 0f), new Vector2(0f, 400f));
 
-            Image tag = UiBuild.Picture("HardTag", button.transform, UiBuild.Art("ribbon_red"), new Vector2(340f, 90f));
+            Sprite ribbon = UiBuild.Art("ribbon_red");
+            Image tag = UiBuild.Picture("HardTag", button.transform, ribbon, new Vector2(110f * ribbon.rect.width / ribbon.rect.height, 110f));
             UiBuild.Place(tag.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, 20f));
             TMP_Text tagLabel = UiBuild.Text("Label", tag.transform, "HARD", 46f, Ink, TextAlignmentOptions.Center);
             tagLabel.fontSharedMaterial = UiBuild.Outline;

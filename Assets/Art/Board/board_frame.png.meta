@@ -52,7 +52,7 @@ TextureImporter:
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 250
-  spriteBorder: {x: 105, y: 105, z: 105, w: 105}
+  spriteBorder: {x: 127.333336, y: 127.333336, z: 127.333336, w: 127.333336}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      board_frame_0: 263172089585269558
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -200,7 +200,18 @@ namespace BlastGame.Game.EditorTools
             var image = go.GetComponent<Image>();
             image.sprite = sprite;
 
-            if (sprite.border != Vector4.zero) image.type = Image.Type.Sliced;
+            if (sprite.border != Vector4.zero)
+            {
+                image.type = Image.Type.Sliced;
+
+                // Border thickness follows the size the piece is drawn at, not the resolution it was
+                // generated at: a border of about a quarter of the shorter side, or a fixed forty units
+                // for a piece stretched to its parent. Without this a high-resolution panel draws its
+                // gold rim at hundreds of units and the middle vanishes.
+                float border = Mathf.Max(Mathf.Max(sprite.border.x, sprite.border.y), Mathf.Max(sprite.border.z, sprite.border.w));
+                float target = size == Vector2.zero ? 40f : Mathf.Min(size.x, size.y) * 0.25f;
+                image.pixelsPerUnitMultiplier = Mathf.Max(1f, border / target);
+            }
             else image.preserveAspect = true;
 
             MakeNonInteractive(image);

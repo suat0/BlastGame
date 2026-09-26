@@ -473,6 +473,16 @@ namespace BlastGame.Game.EditorTools
             string directory = Path.Combine(Directory.GetCurrentDirectory(), OutputRoot, folder);
             Directory.CreateDirectory(directory);
             File.WriteAllBytes(Path.Combine(directory, name + ".png"), image.EncodeToPNG());
+
+            // A regenerated image is a different size, so a nine-slice border set for the old one is
+            // wrong for it. Clearing it lets the import rules measure the new image; a border tuned by
+            // hand for the old art had no meaning left anyway.
+            string assetPath = $"{OutputRoot}/{folder}/{name}.png";
+            if (AssetImporter.GetAtPath(assetPath) is TextureImporter importer && importer.spriteBorder != Vector4.zero)
+            {
+                importer.spriteBorder = Vector4.zero;
+                importer.SaveAndReimport();
+            }
         }
     }
 }

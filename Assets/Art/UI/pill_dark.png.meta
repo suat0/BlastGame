@@ -52,7 +52,7 @@ TextureImporter:
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
-  spriteBorder: {x: 61, y: 61, z: 61, w: 61}
+  spriteBorder: {x: 83.666664, y: 83.666664, z: 83.666664, w: 83.666664}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -160,7 +160,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      pill_dark_0: 4251463837282707204
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

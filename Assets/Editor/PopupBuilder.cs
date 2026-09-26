@@ -58,9 +58,9 @@ namespace BlastGame.Game.EditorTools
 
             TMP_Text title = Heading(card, "Level 1", -150f);
 
-            Image ribbon = UiBuild.Picture("HardRibbon", card, UiBuild.Art("ribbon_red"), new Vector2(520f, 120f));
+            Image ribbon = RibbonImage("HardRibbon", card, "ribbon_red", 150f);
             UiBuild.Place(ribbon.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -265f));
-            Caption(ribbon.transform, "HARD LEVEL", 50f, 10f);
+            Caption(ribbon.transform, "HARD LEVEL", 50f, 12f);
 
             Image goal = UiBuild.Picture("Goal", card, UiBuild.Art("panel_cream"), new Vector2(460f, 190f));
             UiBuild.Place(goal.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -10f));
@@ -223,9 +223,19 @@ namespace BlastGame.Game.EditorTools
         // A ribbon across the card's top edge carrying the popup's title.
         private static void Ribbon(RectTransform card, string sprite, string title)
         {
-            Image ribbon = UiBuild.Picture("Ribbon", card, UiBuild.Art(sprite), new Vector2(900f, 190f));
-            UiBuild.Place(ribbon.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -10f));
-            Caption(ribbon.transform, title, 76f, 14f);
+            Image ribbon = RibbonImage("Ribbon", card, sprite, 300f);
+            UiBuild.Place(ribbon.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, 10f));
+            Caption(ribbon.transform, title, 80f, 26f);
+        }
+
+        // A ribbon sized to its own proportions from a height. Ribbons are not sliced - their curve is
+        // their shape - so the rect has to match the art, or the art draws smaller than the rect and the
+        // title runs off its ends.
+        private static Image RibbonImage(string name, RectTransform parent, string sprite, float height)
+        {
+            Sprite art = UiBuild.Art(sprite);
+            float aspect = art.rect.width / art.rect.height;
+            return UiBuild.Picture(name, parent, art, new Vector2(height * aspect, height));
         }
 
         // A character standing on the card's top edge, drawn behind the ribbon.
@@ -245,8 +255,11 @@ namespace BlastGame.Game.EditorTools
             text.fontSizeMin = size * 0.6f;
             text.fontSizeMax = size;
             UiBuild.Stretch(text.rectTransform, 0f, lift);
-            text.rectTransform.offsetMin += new Vector2(90f, 0f);    // clear of the ribbon's folded ends
-            text.rectTransform.offsetMax -= new Vector2(90f, 0f);
+
+            // Clear of the ribbon's folded ends, which take about a sixth of its width on each side.
+            float inset = ((RectTransform)parent).sizeDelta.x / 6f;
+            text.rectTransform.offsetMin += new Vector2(inset, 0f);
+            text.rectTransform.offsetMax -= new Vector2(inset, 0f);
         }
 
         private static Button Wide(RectTransform card, string name, string sprite, string label, float y)
