@@ -9,36 +9,23 @@ using UnityEngine.UI;
 
 namespace BlastGame.Game.EditorTools
 {
-    // Builds the home scene from nothing and saves it, laid out after Match Villains' home screen:
-    // a top bar (profile, coins, lives, settings), event icons down the sides, the level button above
-    // a five-tab bar with Home raised in the middle.
+    // Builds the home scene from nothing and saves it, laid out after Match Villains' home screen: the
+    // mansion hall behind everything, the family standing in it, a top bar (profile, coins, lives,
+    // settings), events down the sides, the level button above a five-tab bar with Home raised in the
+    // middle.
     //
-    // A scaffold, like the other builders: flat shapes and short words stand in for icons until the
-    // generated art arrives, and once the layout settles the scene becomes the source of truth and
-    // this is retired.
+    // A scaffold, like the other builders: once the layout settles the scene becomes the source of
+    // truth and this is retired.
     public static class HomeBuilder
     {
         public const string ScenePath = "Assets/Scenes/Home.unity";
 
         private const string CatalogPath = "Assets/Levels/LevelCatalog.asset";
         private const string RequestPath = "Assets/Levels/LevelRequest.asset";
+        private const string BackgroundPath = "Assets/Art/Backgrounds/bg_home.jpg";
 
         private static readonly Color Sky = UiBuild.Hex("#2A1B5C");
-        private static readonly Color SkyLow = UiBuild.Hex("#43299A");
         private static readonly Color Ink = Color.white;
-        private static readonly Color Gold = UiBuild.Hex("#FFD84D");
-        private static readonly Color Pill = UiBuild.Hex("#2E1F6B");
-        private static readonly Color PillEdge = UiBuild.Hex("#1A1142");
-        private static readonly Color Purple = UiBuild.Hex("#7A5AD6");
-        private static readonly Color PurpleShade = UiBuild.Hex("#3E2A8A");
-        private static readonly Color NavFill = UiBuild.Hex("#4B3494");
-        private static readonly Color NavRaised = UiBuild.Hex("#8A6AE6");
-        private static readonly Color GreenFace = UiBuild.Hex("#5BC236");
-        private static readonly Color GreenShade = UiBuild.Hex("#2E7A1B");
-        private static readonly Color Red = UiBuild.Hex("#E5483B");
-        private static readonly Color HeartRed = UiBuild.Hex("#F0445A");
-        private static readonly Color Lock = UiBuild.Hex("#E3A92B");
-        private static readonly Color ToastFill = new Color(0.08f, 0.04f, 0.18f, 0.9f);
 
         private static Toast toast;
 
@@ -59,9 +46,9 @@ namespace BlastGame.Game.EditorTools
             Canvas canvas = UiBuild.CreateCanvas("HomeUI", null, 0);
             Transform root = canvas.transform;
 
-            BuildBackdrop(root);
+            BuildBackground(root);
 
-            // Backgrounds above run to the screen edges; everything after this sits in the safe area.
+            // The background above runs to the screen edges; everything after sits in the safe area.
             RectTransform safe = UiBuild.Rect("Safe", root);
             UiBuild.Stretch(safe, 0f, 0f);
             safe.gameObject.AddComponent<SafeArea>();
@@ -69,8 +56,9 @@ namespace BlastGame.Game.EditorTools
             // Built before the buttons that point at it.
             toast = BuildToast(root);
 
-            BuildTitle(safe);
-            CoinCounter coins = BuildTopBar(safe, out Button settings);
+            BuildFamily(safe);
+            BuildLogo(safe);
+            CoinCounter coins = BuildTopBar(safe, root, out Button settings);
             BuildEvents(safe);
             Button levelButton = BuildLevelButton(safe, out GameObject hardTag);
             BuildNavBar(safe);
@@ -101,66 +89,77 @@ namespace BlastGame.Game.EditorTools
             Debug.Log("Home scene built.");
         }
 
-        // Two washes, darker above: a stand-in for the mansion hall until the generated background.
-        private static void BuildBackdrop(Transform root)
+        // The mansion hall, covering the screen at its own aspect: cropped at the sides on a tall phone,
+        // at the top and bottom on a tablet, never stretched.
+        private static void BuildBackground(Transform root)
         {
-            UiBuild.Fill("Backdrop", root, Sky);
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(BackgroundPath);
 
-            Image low = UiBuild.Fill("Floor", root, SkyLow);
-            RectTransform lowRect = low.rectTransform;
-            lowRect.anchorMin = new Vector2(0f, 0f);
-            lowRect.anchorMax = new Vector2(1f, 0.45f);
-            lowRect.offsetMin = lowRect.offsetMax = Vector2.zero;
+            Image image = UiBuild.Picture("Background", root, sprite, Vector2.zero);
+            image.preserveAspect = false;
+            UiBuild.Stretch(image.rectTransform, 0f, 0f);
+
+            var fitter = image.gameObject.AddComponent<AspectRatioFitter>();
+            fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            fitter.aspectRatio = sprite.rect.width / sprite.rect.height;
         }
 
-        private static void BuildTitle(Transform root)
+        // The family standing on the hall's floor, feet on a line above the level button: the Daughter
+        // on the left, the Count in the middle and a step forward, the Butler on the right.
+        private static void BuildFamily(Transform safe)
         {
-            TMP_Text title = UiBuild.Text("Logo", root, "BLAST\nVILLAINS", 150f, Gold, TextAlignmentOptions.Center);
-            title.lineSpacing = -30f;
-            RectTransform rect = title.rectTransform;
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.64f);
-            rect.sizeDelta = new Vector2(900f, 420f);
+            Stand(safe, "Daughter", "char_daughter", new Vector2(360f, 470f), -290f, 640f);
+            Stand(safe, "Butler", "char_butler", new Vector2(440f, 600f), 290f, 640f);
+            Stand(safe, "Count", "char_count", new Vector2(360f, 640f), 0f, 610f);
         }
 
-        // Profile, coins, lives, settings - left to right, as in Match Villains. The round icons sit
-        // across their pill's left end, so each pill starts far enough right to keep them off its
-        // neighbour.
-        private static CoinCounter BuildTopBar(Transform root, out Button settings)
+        private static void Stand(Transform parent, string name, string sprite, Vector2 size, float x, float feet)
         {
-            RectTransform bar = UiBuild.Rect("TopBar", root);
+            Image figure = UiBuild.Picture(name, parent, UiBuild.Art(sprite), size);
+            figure.rectTransform.pivot = new Vector2(0.5f, 0f);
+            UiBuild.Place(figure.rectTransform, new Vector2(0.5f, 0f), new Vector2(x, feet));
+        }
+
+        private static void BuildLogo(Transform safe)
+        {
+            Image logo = UiBuild.Picture("Logo", safe, UiBuild.Art("logo"), new Vector2(560f, 300f));
+            UiBuild.Place(logo.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -330f));
+        }
+
+        // Profile, coins, lives, settings - left to right, as in Match Villains.
+        private static CoinCounter BuildTopBar(Transform safe, Transform canvasRoot, out Button settings)
+        {
+            RectTransform bar = UiBuild.Rect("TopBar", safe);
             bar.anchorMin = new Vector2(0f, 1f);
             bar.anchorMax = new Vector2(1f, 1f);
             bar.pivot = new Vector2(0.5f, 1f);
             bar.sizeDelta = new Vector2(0f, 150f);
-            bar.anchoredPosition = new Vector2(0f, -40f);
+            bar.anchoredPosition = new Vector2(0f, -30f);
 
-            Button profile = Square(bar, "Profile", "?", new Vector2(0f, 0.5f), new Vector2(110f, 0f), 130f, Purple, PurpleShade);
+            Button profile = UiBuild.ArtButton("Profile", bar, UiBuild.Art("icon_profile"), new Vector2(130f, 130f), null, 0f);
+            UiBuild.Place((RectTransform)profile.transform, new Vector2(0f, 0.5f), new Vector2(100f, 0f));
             Locked(profile, "Profile", 10);
 
             // Coins: a real count, and a plus that would open the shop.
-            RectTransform coinPill = PillAt(bar, "Coins", 200f, 300f);
-            RectTransform coinIcon = Disc(coinPill, "Icon", Gold, 100f, new Vector2(30f, 0f), new Vector2(0f, 0.5f));
-            TMP_Text coinLabel = UiBuild.Text("Count", coinPill, "0", 60f, Ink, TextAlignmentOptions.Center);
-            Between(coinLabel.rectTransform);
-            Button coinPlus = PlusButton(coinPill);
-            Locked(coinPlus, "Shop", 15);
+            RectTransform coinPill = Pill(bar, "Coins", 200f, 300f, "icon_coin", out TMP_Text coinLabel, out RectTransform coinIcon);
+            Locked(PlusButton(coinPill), "Shop", 15);
 
             // Lives: a mock, always full. Nothing in this build can run out of them.
-            RectTransform lifePill = PillAt(bar, "Lives", 550f, 250f);
-            RectTransform heart = Disc(lifePill, "Icon", HeartRed, 100f, new Vector2(30f, 0f), new Vector2(0f, 0.5f));
-            TMP_Text hearts = UiBuild.Text("Count", heart, "5", 56f, Ink, TextAlignmentOptions.Center);
-            UiBuild.Stretch(hearts.rectTransform, 0f, 0f);
-            TMP_Text full = UiBuild.Text("Status", lifePill, "Full", 52f, Ink, TextAlignmentOptions.Center);
-            Between(full.rectTransform);
-            Button lifePlus = PlusButton(lifePill);
-            Locked(lifePlus, "Lives shop", 15);
+            RectTransform lifePill = Pill(bar, "Lives", 575f, 245f, "icon_heart", out TMP_Text full, out RectTransform heart);
+            full.text = "Full";
+            TMP_Text hearts = UiBuild.Text("Count", heart, "5", 52f, Ink, TextAlignmentOptions.Center);
+            hearts.fontSharedMaterial = UiBuild.Outline;
+            UiBuild.Stretch(hearts.rectTransform, 0f, 4f);
+            Locked(PlusButton(lifePill), "Lives shop", 15);
 
-            settings = Square(bar, "Settings", "=", new Vector2(1f, 0.5f), new Vector2(-100f, 0f), 120f, Purple, PurpleShade);
+            settings = UiBuild.ArtButton("Settings", bar, UiBuild.Art("icon_gear"), new Vector2(125f, 125f), null, 0f);
+            UiBuild.Place((RectTransform)settings.transform, new Vector2(1f, 0.5f), new Vector2(-95f, 0f));
 
-            // Flyers for the post-win coin flight, hidden until then.
+            // Coins for the post-win flight, hidden until then, on the canvas root so they can cross
+            // the whole screen.
             var flyers = new RectTransform[8];
             for (int i = 0; i < flyers.Length; i++)
-                flyers[i] = Disc(root, "CoinFlyer", Gold, 80f, Vector2.zero, new Vector2(0.5f, 0.5f));
+                flyers[i] = UiBuild.Picture("CoinFlyer", canvasRoot, UiBuild.Art("icon_coin"), new Vector2(90f, 90f)).rectTransform;
 
             var counter = coinPill.gameObject.AddComponent<CoinCounter>();
             var so = new SerializedObject(counter);
@@ -174,28 +173,27 @@ namespace BlastGame.Game.EditorTools
             return counter;
         }
 
-        // Three of Match Villains' events, down the sides, each with a live countdown.
-        private static void BuildEvents(Transform root)
+        // Three of Match Villains' events down the sides, each with a live countdown.
+        private static void BuildEvents(Transform safe)
         {
-            Event(root, "BankRob", "Bank\nRob", new Vector2(0f, 1f), new Vector2(120f, -330f), 25, 72f, 0f);
-            Event(root, "BombHill", "Bomb\nHill", new Vector2(0f, 1f), new Vector2(120f, -560f), 30, 48f, 17f);
-            Event(root, "Thunder", "Thun\nder", new Vector2(1f, 1f), new Vector2(-120f, -330f), 18, 96f, 41f);
+            Event(safe, "BankRob", "event_bankrob", "Bank Rob", new Vector2(0f, 1f), new Vector2(110f, -320f), 25, 72f, 0f);
+            Event(safe, "BombHill", "event_bombhill", "Bomb Hill", new Vector2(0f, 1f), new Vector2(110f, -560f), 30, 48f, 17f);
+            Event(safe, "Thunder", "event_thunder", "Thunder", new Vector2(1f, 1f), new Vector2(-110f, -320f), 18, 96f, 41f);
         }
 
-        private static void Event(Transform root, string name, string glyph, Vector2 anchor, Vector2 position,
+        private static void Event(Transform safe, string name, string sprite, string feature, Vector2 anchor, Vector2 position,
                                   int unlockLevel, float periodHours, float offsetHours)
         {
-            Button icon = Square(root, name, glyph, anchor, position, 160f, Purple, PurpleShade);
-            icon.GetComponentInChildren<TMP_Text>().fontSize = 40f;
-            Locked(icon, name == "BankRob" ? "Bank Rob" : name == "BombHill" ? "Bomb Hill" : "Thunder", unlockLevel);
+            Button icon = UiBuild.ArtButton(name, safe, UiBuild.Art(sprite), new Vector2(160f, 160f), null, 0f);
+            UiBuild.Place((RectTransform)icon.transform, anchor, position);
+            Locked(icon, feature, unlockLevel);
 
-            RectTransform timerPill = UiBuild.Panel("TimerPill", icon.transform, Pill, 0f, 0f);
-            timerPill.anchorMin = timerPill.anchorMax = new Vector2(0.5f, 0f);
-            timerPill.sizeDelta = new Vector2(170f, 56f);
-            timerPill.anchoredPosition = new Vector2(0f, -30f);
+            Image timerPill = UiBuild.Picture("TimerPill", icon.transform, UiBuild.Art("pill_dark"), new Vector2(180f, 60f));
+            UiBuild.Place(timerPill.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, -22f));
 
-            TMP_Text label = UiBuild.Text("Time", timerPill, "1d 16h", 38f, Ink, TextAlignmentOptions.Center);
-            UiBuild.Stretch(label.rectTransform, 0f, 0f);
+            TMP_Text label = UiBuild.Text("Time", timerPill.transform, "1d 16h", 38f, Ink, TextAlignmentOptions.Center);
+            label.fontSharedMaterial = UiBuild.Outline;
+            UiBuild.Stretch(label.rectTransform, 0f, 2f);
 
             var timer = icon.gameObject.AddComponent<EventTimer>();
             var so = new SerializedObject(timer);
@@ -205,20 +203,16 @@ namespace BlastGame.Game.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static Button BuildLevelButton(Transform root, out GameObject hardTag)
+        private static Button BuildLevelButton(Transform safe, out GameObject hardTag)
         {
-            Button button = UiBuild.CreateButton("LevelButton", root, new Vector2(640f, 210f), Vector2.zero,
-                                                 GreenFace, GreenShade, "Level 1", 110f, Ink);
-            var rect = (RectTransform)button.transform;
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, 420f);
+            Button button = UiBuild.ArtButton("LevelButton", safe, UiBuild.Art("btn_green"), new Vector2(640f, 220f), "Level 1", 110f);
+            UiBuild.Place((RectTransform)button.transform, new Vector2(0.5f, 0f), new Vector2(0f, 400f));
 
-            RectTransform tag = UiBuild.Panel("HardTag", rect, Red, 0f, 0f);
-            tag.anchorMin = tag.anchorMax = new Vector2(0.5f, 1f);
-            tag.sizeDelta = new Vector2(240f, 70f);
-            tag.anchoredPosition = new Vector2(0f, 20f);
-            TMP_Text tagLabel = UiBuild.Text("Label", tag, "HARD", 48f, Ink, TextAlignmentOptions.Center);
-            UiBuild.Stretch(tagLabel.rectTransform, 0f, 0f);
+            Image tag = UiBuild.Picture("HardTag", button.transform, UiBuild.Art("ribbon_red"), new Vector2(340f, 90f));
+            UiBuild.Place(tag.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, 20f));
+            TMP_Text tagLabel = UiBuild.Text("Label", tag.transform, "HARD", 46f, Ink, TextAlignmentOptions.Center);
+            tagLabel.fontSharedMaterial = UiBuild.Outline;
+            UiBuild.Stretch(tagLabel.rectTransform, 0f, 8f);
 
             hardTag = tag.gameObject;
             hardTag.SetActive(false);
@@ -226,18 +220,23 @@ namespace BlastGame.Game.EditorTools
         }
 
         // Album, Leaderboard, Home, Team, Shop - Match Villains' order, Home raised in the middle.
-        private static void BuildNavBar(Transform root)
+        private static void BuildNavBar(Transform safe)
         {
-            RectTransform bar = UiBuild.Rect("NavBar", root);
+            RectTransform bar = UiBuild.Rect("NavBar", safe);
             bar.anchorMin = new Vector2(0f, 0f);
             bar.anchorMax = new Vector2(1f, 0f);
             bar.pivot = new Vector2(0.5f, 0f);
-            bar.sizeDelta = new Vector2(0f, 200f);
+            bar.sizeDelta = new Vector2(0f, 210f);
             bar.anchoredPosition = Vector2.zero;
 
-            UiBuild.Fill("Fill", bar, NavFill);
+            Image fill = UiBuild.Picture("Fill", bar, UiBuild.Art("panel_purple"), Vector2.zero);
+            UiBuild.Stretch(fill.rectTransform, 0f, 0f);
+            fill.rectTransform.offsetMin = new Vector2(-20f, -40f);   // past the screen edges: no rim at the sides or bottom
+            fill.rectTransform.offsetMax = new Vector2(20f, 0f);
 
             string[] names = { "Album", "Ranks", "Home", "Team", "Shop" };
+            string[] icons = { "icon_album", "icon_leaderboard", "icon_home", "icon_team", "icon_shop" };
+            string[] features = { "Album", "Leaderboard", null, "Team", "Shop" };
             int[] unlocks = { 8, 12, 0, 20, 15 };
 
             for (int i = 0; i < names.Length; i++)
@@ -247,25 +246,35 @@ namespace BlastGame.Game.EditorTools
                 RectTransform slot = UiBuild.Rect(names[i], bar);
                 slot.anchorMin = new Vector2(i / 5f, 0f);
                 slot.anchorMax = new Vector2((i + 1) / 5f, 1f);
-                slot.offsetMin = new Vector2(6f, home ? 0f : 10f);
-                slot.offsetMax = new Vector2(-6f, home ? 50f : -10f);    // Home stands proud of the bar
+                slot.offsetMin = Vector2.zero;
+                slot.offsetMax = Vector2.zero;
 
-                RectTransform face = UiBuild.Panel("Face", slot, home ? NavRaised : Purple, 0f, 0f);
-                TMP_Text label = UiBuild.Text("Label", face, names[i], home ? 52f : 42f, Ink, TextAlignmentOptions.Center);
-                UiBuild.Stretch(label.rectTransform, 0f, 0f);
+                if (home)
+                {
+                    // Standing proud of the bar on a panel of its own, labelled, as the current tab.
+                    Image raised = UiBuild.Picture("Raised", slot, UiBuild.Art("panel_purple"), new Vector2(210f, 250f));
+                    UiBuild.Place(raised.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 125f));
+                    Image homeIcon = UiBuild.Picture("Icon", raised.transform, UiBuild.Art(icons[i]), new Vector2(160f, 160f));
+                    UiBuild.Place(homeIcon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 25f));
 
-                if (home) continue;   // already here
+                    TMP_Text label = UiBuild.Text("Label", raised.transform, "Home", 44f, Ink, TextAlignmentOptions.Center);
+                    label.fontSharedMaterial = UiBuild.Outline;
+                    label.rectTransform.sizeDelta = new Vector2(200f, 60f);
+                    UiBuild.Place(label.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 40f));
+                    continue;
+                }
 
-                var image = face.GetComponent<Image>();
-                image.raycastTarget = true;
+                Image icon = UiBuild.Picture("Icon", slot, UiBuild.Art(icons[i]), new Vector2(140f, 140f));
+                UiBuild.Place(icon.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero);
+                icon.raycastTarget = true;
+
+                Image padlock = UiBuild.Picture("Lock", icon.transform, UiBuild.Art("icon_lock"), new Vector2(60f, 60f));
+                UiBuild.Place(padlock.rectTransform, new Vector2(1f, 1f), new Vector2(-8f, -8f));
+
+                // On the slot, which keeps the tab's name; the icon is what takes the tap.
                 var button = slot.gameObject.AddComponent<Button>();
-                button.targetGraphic = image;
-
-                RectTransform lockBadge = Disc(face, "Lock", Lock, 54f, new Vector2(-10f, -10f), new Vector2(1f, 1f));
-                TMP_Text lockGlyph = UiBuild.Text("Glyph", lockBadge, "L", 34f, Ink, TextAlignmentOptions.Center);
-                UiBuild.Stretch(lockGlyph.rectTransform, 0f, 0f);
-
-                Locked(button, names[i] == "Ranks" ? "Leaderboard" : names[i], unlocks[i]);
+                button.targetGraphic = icon;
+                Locked(button, features[i], unlocks[i]);
             }
         }
 
@@ -274,13 +283,12 @@ namespace BlastGame.Game.EditorTools
             RectTransform area = UiBuild.Rect("Toast", root);
             UiBuild.Stretch(area, 0f, 0f);
 
-            RectTransform body = UiBuild.Panel("Body", area, ToastFill, 0f, 0f);
-            body.anchorMin = body.anchorMax = new Vector2(0.5f, 0.36f);
-            body.sizeDelta = new Vector2(860f, 130f);
-            body.anchoredPosition = Vector2.zero;
+            Image body = UiBuild.Picture("Body", area, UiBuild.Art("pill_dark"), new Vector2(880f, 140f));
+            UiBuild.Place(body.rectTransform, new Vector2(0.5f, 0.36f), Vector2.zero);
 
-            TMP_Text label = UiBuild.Text("Label", body, "Unlocks at Level 10", 54f, Ink, TextAlignmentOptions.Center);
-            UiBuild.Stretch(label.rectTransform, 0f, 0f);
+            TMP_Text label = UiBuild.Text("Label", body.transform, "Unlocks at Level 10", 52f, Ink, TextAlignmentOptions.Center);
+            label.fontSharedMaterial = UiBuild.Outline;
+            UiBuild.Stretch(label.rectTransform, 0f, 2f);
 
             var group = area.gameObject.AddComponent<CanvasGroup>();
             group.blocksRaycasts = false;
@@ -289,7 +297,7 @@ namespace BlastGame.Game.EditorTools
             var created = area.gameObject.AddComponent<Toast>();
             var so = new SerializedObject(created);
             so.FindProperty("group").objectReferenceValue = group;
-            so.FindProperty("body").objectReferenceValue = body;
+            so.FindProperty("body").objectReferenceValue = body.rectTransform;
             so.FindProperty("label").objectReferenceValue = label;
             so.ApplyModifiedPropertiesWithoutUndo();
 
@@ -298,56 +306,36 @@ namespace BlastGame.Game.EditorTools
 
         // --- small parts ----------------------------------------------------------------------
 
-        private static Button Square(Transform parent, string name, string glyph, Vector2 anchor, Vector2 position,
-                                     float size, Color face, Color shade)
+        // A dark pill with an icon across its left end and a label in the rest.
+        private static RectTransform Pill(RectTransform bar, string name, float left, float width, string iconName,
+                                          out TMP_Text label, out RectTransform icon)
         {
-            Button button = UiBuild.CreateButton(name, parent, new Vector2(size, size), Vector2.zero,
-                                                 face, shade, glyph, size * 0.45f, Ink);
-            var rect = (RectTransform)button.transform;
-            rect.anchorMin = rect.anchorMax = anchor;
-            rect.anchoredPosition = position;
-            return button;
-        }
+            Image pill = UiBuild.Picture(name, bar, UiBuild.Art("pill_dark"), new Vector2(width, 96f));
+            RectTransform rect = pill.rectTransform;
+            rect.pivot = new Vector2(0f, 0.5f);
+            UiBuild.Place(rect, new Vector2(0f, 0.5f), new Vector2(left, 0f));
 
-        private static RectTransform PillAt(RectTransform bar, string name, float left, float width)
-        {
-            RectTransform pill = UiBuild.Rect(name, bar);
-            pill.anchorMin = pill.anchorMax = new Vector2(0f, 0.5f);
-            pill.pivot = new Vector2(0f, 0.5f);
-            pill.sizeDelta = new Vector2(width, 96f);
-            pill.anchoredPosition = new Vector2(left, 0f);
+            icon = UiBuild.Picture("Icon", rect, UiBuild.Art(iconName), new Vector2(110f, 110f)).rectTransform;
+            UiBuild.Place(icon, new Vector2(0f, 0.5f), new Vector2(20f, 0f));
 
-            UiBuild.Panel("Edge", pill, PillEdge, 0f, -6f);
-            UiBuild.Panel("Fill", pill, Pill, 0f, 0f);
-            return pill;
-        }
+            label = UiBuild.Text("Count", rect, "0", 56f, Ink, TextAlignmentOptions.Center);
+            label.fontSharedMaterial = UiBuild.Outline;
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 36f;
+            label.fontSizeMax = 56f;
+            label.rectTransform.anchorMin = Vector2.zero;
+            label.rectTransform.anchorMax = Vector2.one;
+            label.rectTransform.offsetMin = new Vector2(80f, 0f);
+            label.rectTransform.offsetMax = new Vector2(-60f, -2f);
 
-        private static RectTransform Disc(Transform parent, string name, Color color, float size, Vector2 position, Vector2 anchor)
-        {
-            RectTransform disc = UiBuild.Panel(name, parent, color, 0f, 0f);
-            disc.anchorMin = disc.anchorMax = anchor;
-            disc.sizeDelta = new Vector2(size, size);
-            disc.anchoredPosition = position;
-            disc.GetComponent<Image>().pixelsPerUnitMultiplier = 0.1f;   // a tight radius reads as round
-            return disc;
-        }
-
-        // The stretch of a pill between its round icon on the left and its plus on the right.
-        private static void Between(RectTransform label)
-        {
-            label.anchorMin = Vector2.zero;
-            label.anchorMax = Vector2.one;
-            label.offsetMin = new Vector2(80f, 0f);
-            label.offsetMax = new Vector2(-60f, -2f);
+            return rect;
         }
 
         private static Button PlusButton(RectTransform pill)
         {
-            Button plus = UiBuild.CreateButton("Plus", pill, new Vector2(70f, 70f), Vector2.zero,
-                                               GreenFace, GreenShade, "+", 60f, Ink);
-            var rect = (RectTransform)plus.transform;
-            rect.anchorMin = rect.anchorMax = new Vector2(1f, 0.5f);
-            rect.anchoredPosition = new Vector2(-10f, 0f);
+            Button plus = UiBuild.ArtButton("Plus", pill, UiBuild.Art("icon_plus"), new Vector2(76f, 76f), null, 0f);
+            UiBuild.Place((RectTransform)plus.transform, new Vector2(1f, 0.5f), new Vector2(-6f, 0f));
             return plus;
         }
 
