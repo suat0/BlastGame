@@ -174,6 +174,67 @@ namespace BlastGame.Game.EditorTools
             return button;
         }
 
+        // --- generated art --------------------------------------------------------------------
+
+        // A sprite from Art/UI or Art/UI/Icons by file name. Missing art is an error here rather than a
+        // blank image found later.
+        public static Sprite Art(string name)
+        {
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Art/UI/{name}.png")
+                            ?? AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Art/UI/Icons/{name}.png")
+                            ?? AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Art/Characters/{name}.png");
+            if (sprite == null) throw new System.IO.FileNotFoundException($"No UI art named '{name}'.");
+            return sprite;
+        }
+
+        // An image of a sprite at a size. Sliced when the sprite has a border (panels, pills, buttons),
+        // aspect-preserving otherwise (icons, characters) so nothing is stretched out of shape.
+        public static Image Picture(string name, Transform parent, Sprite sprite, Vector2 size)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(parent, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = size;
+
+            var image = go.GetComponent<Image>();
+            image.sprite = sprite;
+
+            if (sprite.border != Vector4.zero) image.type = Image.Type.Sliced;
+            else image.preserveAspect = true;
+
+            MakeNonInteractive(image);
+            return image;
+        }
+
+        // A button drawn by a sprite, labelled in the outlined font the way Match Villains letters its
+        // buttons. The image is the only raycast target in it.
+        public static Button ArtButton(string name, Transform parent, Sprite sprite, Vector2 size,
+                                       string label, float labelSize)
+        {
+            Image face = Picture(name, parent, sprite, size);
+            face.raycastTarget = true;
+
+            var button = face.gameObject.AddComponent<Button>();
+            button.targetGraphic = face;
+
+            if (!string.IsNullOrEmpty(label))
+            {
+                TMP_Text text = Text("Label", face.transform, label, labelSize, Color.white, TextAlignmentOptions.Center);
+                text.fontSharedMaterial = Outline;
+                text.textWrappingMode = TextWrappingModes.NoWrap;
+                Stretch(text.rectTransform, 0f, 6f);   // a little above centre, off the button's lower lip
+            }
+
+            return button;
+        }
+
+        public static void Place(RectTransform rect, Vector2 anchor, Vector2 position)
+        {
+            rect.anchorMin = rect.anchorMax = anchor;
+            rect.anchoredPosition = position;
+        }
+
         // Two opt-outs, both for graphics nobody interacts with. raycastTarget keeps the graphic off
         // the list the raycaster walks on every tap; maskable keeps it out of the stencil test uGUI
         // otherwise runs in case a Mask is above it. Safe only because these canvases have no Mask or

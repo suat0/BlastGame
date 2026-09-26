@@ -24,16 +24,8 @@ namespace BlastGame.Game.EditorTools
 
         // One place for every colour in the HUD, picked against Match Villains' in-level HUD: a purple
         // bar, white plates, dark purple figures.
-        private static readonly Color BarFill = UiBuild.Hex("#5B3FB8");
-        private static readonly Color BarEdge = UiBuild.Hex("#2E1F6B");
-        private static readonly Color PlateFill = UiBuild.Hex("#FFFFFF");
-        private static readonly Color PlateShade = UiBuild.Hex("#B9AEE8");
         private static readonly Color Figure = UiBuild.Hex("#2E2153");
         private static readonly Color Caption = UiBuild.Hex("#FFFFFF");
-        private static readonly Color PortraitEdge = UiBuild.Hex("#E3A92B");
-        private static readonly Color PortraitFill = UiBuild.Hex("#7A5AD6");
-        private static readonly Color GearFace = UiBuild.Hex("#7A5AD6");
-        private static readonly Color GearShade = UiBuild.Hex("#3E2A8A");
         private static readonly Color Gold = UiBuild.Hex("#FFD84D");
         private static readonly Color BannerFill = new Color(0.18f, 0.10f, 0.40f, 0.92f);
         private static readonly Color Sky = UiBuild.Hex("#1E1638");
@@ -179,8 +171,8 @@ namespace BlastGame.Game.EditorTools
 
             // Drawn first so the fill covers it except where it is offset: a solid shadow, not a
             // blurred one, which is what the block art does too.
-            UiBuild.Panel("Edge", bar, BarEdge, 0f, -12f);
-            UiBuild.Panel("Fill", bar, BarFill, 0f, 0f);
+            Image barFace = UiBuild.Picture("Fill", bar, UiBuild.Art("panel_purple"), Vector2.zero);
+            UiBuild.Stretch(barFace.rectTransform, 0f, 0f);
 
             RectTransform movesPlate = Plate(bar, "Moves", new Vector2(40f, 0f), 230f);
             moves = UiBuild.Text("Value", movesPlate, "20", 96f, Figure, TextAlignmentOptions.Center);
@@ -207,16 +199,17 @@ namespace BlastGame.Game.EditorTools
             countRect.sizeDelta = new Vector2(150f, 100f);
             countRect.anchoredPosition = new Vector2(70f, -4f);
 
-            // The Count watches from the corner. A gold ring and a purple face until the generated
-            // portrait replaces them.
+            // The Count watches from the corner, framed in a gold shield, hanging below the bar the
+            // way Match Villains hangs its portrait.
             RectTransform portrait = UiBuild.Rect("Portrait", bar);
             portrait.anchorMin = portrait.anchorMax = new Vector2(1f, 0.5f);
-            portrait.sizeDelta = new Vector2(230f, 230f);
-            portrait.anchoredPosition = new Vector2(-130f, -20f);
-            UiBuild.Panel("Edge", portrait, PortraitEdge, 0f, 0f);
-            RectTransform face = UiBuild.Panel("Face", portrait, PortraitFill, 0f, 0f);
-            face.offsetMin = new Vector2(14f, 14f);
-            face.offsetMax = new Vector2(-14f, -14f);
+            portrait.sizeDelta = new Vector2(250f, 290f);
+            portrait.anchoredPosition = new Vector2(-140f, -30f);
+
+            Image face = UiBuild.Picture("Face", portrait, UiBuild.Art("portrait_count"), new Vector2(200f, 200f));
+            UiBuild.Place(face.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 10f));
+            Image shield = UiBuild.Picture("Frame", portrait, UiBuild.Art("frame_portrait"), new Vector2(250f, 290f));
+            UiBuild.Place(shield.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero);
         }
 
         private static RectTransform Flyer(Transform canvas)
@@ -287,6 +280,7 @@ namespace BlastGame.Game.EditorTools
             column.anchoredPosition = left;
 
             TMP_Text label = UiBuild.Text("Caption", column, caption, 44f, Caption, TextAlignmentOptions.Center);
+            label.fontSharedMaterial = UiBuild.Outline;
             RectTransform labelRect = label.rectTransform;
             labelRect.anchorMin = new Vector2(0f, 1f);
             labelRect.anchorMax = new Vector2(1f, 1f);
@@ -300,16 +294,15 @@ namespace BlastGame.Game.EditorTools
             plateArea.offsetMin = new Vector2(0f, 28f);
             plateArea.offsetMax = new Vector2(0f, -78f);
 
-            UiBuild.Panel("Shade", plateArea, PlateShade, 0f, -8f);
-            return UiBuild.Panel("Plate", plateArea, PlateFill, 0f, 0f);
+            Image plate = UiBuild.Picture("Plate", plateArea, UiBuild.Art("panel_cream"), Vector2.zero);
+            UiBuild.Stretch(plate.rectTransform, 0f, 0f);
+            return plate.rectTransform;
         }
 
-        // Bottom right, where Match Villains keeps its settings gear. A pause glyph until the gear icon
-        // arrives with the generated art.
+        // Bottom right, where Match Villains keeps its settings gear.
         private static Button BuildSettingsButton(Transform canvas)
         {
-            Button button = UiBuild.CreateButton("SettingsButton", canvas, new Vector2(160f, 160f), Vector2.zero,
-                                                 GearFace, GearShade, "II", 76f, Caption);
+            Button button = UiBuild.ArtButton("SettingsButton", canvas, UiBuild.Art("icon_gear"), new Vector2(170f, 170f), null, 0f);
             var rect = (RectTransform)button.transform;
             rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
             rect.pivot = new Vector2(1f, 0f);
