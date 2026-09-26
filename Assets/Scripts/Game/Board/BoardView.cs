@@ -145,6 +145,14 @@ namespace BlastGame.Game
                  "the batch holds; z alone decides that a shard draws in front of the blocks.")]
         [SerializeField] private float effectDepth = -0.1f;
 
+        // Raised once per Box broken, with where it was. The HUD flies a Box from here to its goal
+        // counter. A struct argument and a named listener, so raising it allocates nothing.
+        public event Action<Vector3> OnBoxBroken;
+
+        public Camera Camera => boardCamera;
+
+        public Vector3 WorldOfCell(int cell) => CellToWorld(cell);
+
         private Board board;
         private BlockPool pool;
         private FallAnimator fallAnimator;
@@ -464,12 +472,14 @@ namespace BlastGame.Game
                 if (vfx != null) vfx.Splinters(CellToWorld(cell), splintersPerHit);
             }
 
-            if (vfx == null) return;
-
             ReadOnlySpan<int> broken = result.BrokenBoxes;
             for (int i = 0; i < broken.Length; i++)
             {
                 Vector3 where = CellToWorld(broken[i]);
+                OnBoxBroken?.Invoke(where);
+
+                if (vfx == null) continue;
+
                 vfx.Splinters(where, splintersPerBreak);
                 vfx.Dust(where, 3);
             }

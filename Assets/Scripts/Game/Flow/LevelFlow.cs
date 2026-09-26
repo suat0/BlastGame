@@ -18,6 +18,8 @@ namespace BlastGame.Game
         [SerializeField] private GameController controller;
         [SerializeField] private BoardView boardView;
         [SerializeField] private InputHandler input;
+        [SerializeField] private HudView hud;
+        [SerializeField] private FeedbackView feedback;
 
         [Header("UI")]
         [SerializeField] private Button settingsButton;
@@ -39,6 +41,9 @@ namespace BlastGame.Game
                  "landing before anything covers it.")]
         [SerializeField] private float outcomeBeat = 0.4f;
 
+        [Tooltip("Seconds of flash and confetti on a win before the card covers the board.")]
+        [SerializeField] private float celebrationDuration = 0.7f;
+
         [Header("Reward")]
         [SerializeField] private int coinsPerWin = 20;
         [SerializeField] private int coinsPerMoveLeft = 5;
@@ -47,6 +52,8 @@ namespace BlastGame.Game
 
         public GameController Controller => controller;
         public BoardView BoardView => boardView;
+        public HudView Hud => hud;
+        public FeedbackView Feedback => feedback;
         public IntroBanner IntroBanner => introBanner;
         public LevelStartPopup StartPopup => startPopup;
         public SettingsPopup PausePopup => pausePopup;
@@ -57,6 +64,7 @@ namespace BlastGame.Game
         public float IntroDuration => introDuration;
         public float OutcomeBeat => outcomeBeat;
         public float HintDelay => hintDelay;
+        public float CelebrationDuration => celebrationDuration;
 
         public BriefingState Briefing { get; private set; }
         public IntroState Intro { get; private set; }

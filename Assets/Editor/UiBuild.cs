@@ -30,6 +30,35 @@ namespace BlastGame.Game.EditorTools
             }
         }
 
+        public const string OutlinePath = "Assets/Fonts/Baloo2-ExtraBold SDF Outline.mat";
+
+        private static Material outline;
+
+        // The font with a thick dark purple outline, as Match Villains letters its callouts and
+        // buttons. A material of its own, so text using it costs a SetPass of its own - kept to the
+        // few places that are meant to shout.
+        public static Material Outline
+        {
+            get
+            {
+                if (outline != null) return outline;
+
+                outline = AssetDatabase.LoadAssetAtPath<Material>(OutlinePath);
+                if (outline == null)
+                {
+                    outline = new Material(Font.material) { name = "Baloo2-ExtraBold SDF Outline" };
+                    AssetDatabase.CreateAsset(outline, OutlinePath);
+                }
+
+                outline.EnableKeyword("OUTLINE_ON");
+                outline.SetFloat("_OutlineWidth", 0.28f);
+                outline.SetColor("_OutlineColor", Hex("#2E1F6B"));
+                outline.SetFloat("_FaceDilate", 0.15f);
+                EditorUtility.SetDirty(outline);
+                return outline;
+            }
+        }
+
         // Unity's own rounded nine-slice, the one a fresh Image starts with. Tinted per panel, it
         // carries every panel until the generated art replaces it.
         public static Sprite PanelSprite =>

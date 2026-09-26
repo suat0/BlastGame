@@ -16,7 +16,8 @@ namespace BlastGame.Game
 
         public override void Tick(float unscaledDeltaTime)
         {
-            if (!Flow.BoardView.IsIdle) return;
+            // The Boxes flying to the goal count too: the last one landing is part of the win.
+            if (!Flow.BoardView.IsIdle || !Flow.Hud.IsIdle) return;
 
             beat -= unscaledDeltaTime;
             if (beat <= 0f) Flow.ChangeState(outcome);

@@ -34,6 +34,7 @@ namespace BlastGame.Game.EditorTools
         private static readonly Color PortraitFill = UiBuild.Hex("#7A5AD6");
         private static readonly Color GearFace = UiBuild.Hex("#7A5AD6");
         private static readonly Color GearShade = UiBuild.Hex("#3E2A8A");
+        private static readonly Color Gold = UiBuild.Hex("#FFD84D");
         private static readonly Color BannerFill = new Color(0.18f, 0.10f, 0.40f, 0.92f);
         private static readonly Color Sky = UiBuild.Hex("#1E1638");
         private static readonly Color Well = UiBuild.Hex("#17102F");
@@ -55,7 +56,8 @@ namespace BlastGame.Game.EditorTools
             UiBuild.Stretch(safe, 0f, 0f);
             safe.gameObject.AddComponent<SafeArea>();
 
-            BuildTopBar(safe, out TMP_Text moves, out TMP_Text objective, out GameObject objectiveGroup);
+            BuildTopBar(safe, out TMP_Text moves, out TMP_Text objective, out GameObject objectiveGroup,
+                        out RectTransform objectiveIcon);
             Button settings = BuildSettingsButton(safe);
             RectTransform boardArea = BuildBoardArea(safe);
 
@@ -63,9 +65,19 @@ namespace BlastGame.Game.EditorTools
             hudSo.FindProperty("movesLabel").objectReferenceValue = moves;
             hudSo.FindProperty("objectiveLabel").objectReferenceValue = objective;
             hudSo.FindProperty("objectiveGroup").objectReferenceValue = objectiveGroup;
+            hudSo.FindProperty("objectiveIcon").objectReferenceValue = objectiveIcon;
+            hudSo.FindProperty("boardView").objectReferenceValue = Object.FindFirstObjectByType<BoardView>();
+
+            // Boxes flying from the board to the goal. On the HUD canvas root, outside the safe area,
+            // since they start wherever the board is.
+            SerializedProperty flyerList = hudSo.FindProperty("flyers");
+            flyerList.arraySize = 10;
+            for (int i = 0; i < 10; i++)
+                flyerList.GetArrayElementAtIndex(i).objectReferenceValue = Flyer(hudCanvas);
             hudSo.ApplyModifiedPropertiesWithoutUndo();
 
-            BuildFlow(settings);
+            FeedbackView feedback = BuildFeedback();
+            BuildFlow(settings, hud, feedback);
             BuildBackdrop(boardArea);
 
             Camera camera = Camera.main;
@@ -79,7 +91,7 @@ namespace BlastGame.Game.EditorTools
 
         // The popups get a canvas of their own above the HUD: a popup animating in rebuilds its own
         // canvas and leaves the HUD's alone.
-        private static void BuildFlow(Button settings)
+        private static void BuildFlow(Button settings, HudView hud, FeedbackView feedback)
         {
             Replace(null, "Popups");
             Replace(null, "Flow");
@@ -102,6 +114,8 @@ namespace BlastGame.Game.EditorTools
             so.FindProperty("controller").objectReferenceValue = Object.FindFirstObjectByType<GameController>();
             so.FindProperty("boardView").objectReferenceValue = Object.FindFirstObjectByType<BoardView>();
             so.FindProperty("input").objectReferenceValue = Object.FindFirstObjectByType<InputHandler>();
+            so.FindProperty("hud").objectReferenceValue = hud;
+            so.FindProperty("feedback").objectReferenceValue = feedback;
             so.FindProperty("settingsButton").objectReferenceValue = settings;
             so.FindProperty("introBanner").objectReferenceValue = banner;
             so.FindProperty("startPopup").objectReferenceValue = start;
@@ -154,7 +168,7 @@ namespace BlastGame.Game.EditorTools
         // Match Villains' layout: a purple bar across the top holding a white Moves plate and a white
         // Goals plate, with the Count's portrait hanging off the right end.
         private static void BuildTopBar(Transform canvas, out TMP_Text moves, out TMP_Text objective,
-                                        out GameObject objectiveGroup)
+                                        out GameObject objectiveGroup, out RectTransform objectiveIcon)
         {
             RectTransform bar = UiBuild.Rect("TopBar", canvas);
             bar.anchorMin = new Vector2(0f, 1f);
@@ -185,6 +199,7 @@ namespace BlastGame.Game.EditorTools
             var iconImage = icon.GetComponent<Image>();
             iconImage.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(BoxSpritePath);
             UiBuild.MakeNonInteractive(iconImage);
+            objectiveIcon = iconRect;
 
             objective = UiBuild.Text("Count", goalsPlate, "8", 80f, Figure, TextAlignmentOptions.Left);
             RectTransform countRect = objective.rectTransform;
@@ -202,6 +217,62 @@ namespace BlastGame.Game.EditorTools
             RectTransform face = UiBuild.Panel("Face", portrait, PortraitFill, 0f, 0f);
             face.offsetMin = new Vector2(14f, 14f);
             face.offsetMax = new Vector2(-14f, -14f);
+        }
+
+        private static RectTransform Flyer(Transform canvas)
+        {
+            var go = new GameObject("BoxFlyer", typeof(RectTransform), typeof(Image));
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(canvas, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(100f, 100f);
+
+            var image = go.GetComponent<Image>();
+            image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(BoxSpritePath);
+            UiBuild.MakeNonInteractive(image);
+            return rect;
+        }
+
+        // Between the HUD and the popups: score popups, the combo word, the flash.
+        private static FeedbackView BuildFeedback()
+        {
+            Replace(null, "Feedback");
+
+            Canvas canvas = UiBuild.CreateCanvas("Feedback", null, 5);
+            canvas.GetComponent<GraphicRaycaster>().enabled = false;   // shows things, takes no taps
+            Transform root = canvas.transform;
+
+            Image flash = UiBuild.Fill("Flash", root, Color.white);
+
+            var popups = new TMP_Text[6];
+            for (int i = 0; i < popups.Length; i++)
+            {
+                TMP_Text popup = UiBuild.Text("Score", root, "+0", 72f, Color.white, TextAlignmentOptions.Center);
+                popup.fontSharedMaterial = UiBuild.Outline;
+                popup.rectTransform.anchorMin = popup.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                popup.rectTransform.sizeDelta = new Vector2(300f, 100f);
+                popups[i] = popup;
+            }
+
+            TMP_Text combo = UiBuild.Text("Combo", root, "Amazing!", 150f, Gold, TextAlignmentOptions.Center);
+            combo.fontSharedMaterial = UiBuild.Outline;
+            combo.textWrappingMode = TextWrappingModes.NoWrap;
+            RectTransform comboRect = combo.rectTransform;
+            comboRect.anchorMin = comboRect.anchorMax = new Vector2(0.5f, 0.62f);
+            comboRect.sizeDelta = new Vector2(1000f, 220f);
+
+            var feedback = canvas.gameObject.AddComponent<FeedbackView>();
+            var so = new SerializedObject(feedback);
+            so.FindProperty("controller").objectReferenceValue = Object.FindFirstObjectByType<GameController>();
+            so.FindProperty("boardView").objectReferenceValue = Object.FindFirstObjectByType<BoardView>();
+            so.FindProperty("comboLabel").objectReferenceValue = combo;
+            so.FindProperty("flash").objectReferenceValue = flash;
+            SerializedProperty list = so.FindProperty("scorePopups");
+            list.arraySize = popups.Length;
+            for (int i = 0; i < popups.Length; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = popups[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            return feedback;
         }
 
         // A white plate under a caption, as the in-level HUD of Match Villains lays out Moves and Goals.
