@@ -1,6 +1,6 @@
 namespace BlastGame.Game
 {
-    // The goal banner sweeps across while the board settles in. No input until it has gone.
+    // The blocks rain into the board while the goal banner sweeps across. No input until it has gone.
     public sealed class IntroState : LevelState
     {
         private float remaining;
@@ -10,6 +10,7 @@ namespace BlastGame.Game
         public override void Enter()
         {
             remaining = Flow.IntroDuration;
+            Flow.BoardView.DropIn();
             Flow.IntroBanner.Play(Flow.Controller.Session.RemainingBoxes, Flow.IntroDuration * 0.6f);
         }
 

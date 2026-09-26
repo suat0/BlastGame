@@ -29,5 +29,8 @@ namespace BlastGame.Game
         // Core resolved a move and the session's status changed. Called before any view has animated
         // the move.
         public virtual void OnStatusChanged(GameState state) { }
+
+        // A tap that played nothing - a lone block, a Box.
+        public virtual void OnTapRejected() { }
     }
 }

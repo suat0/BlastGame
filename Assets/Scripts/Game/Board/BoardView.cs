@@ -113,6 +113,18 @@ namespace BlastGame.Game
         [Tooltip("Seconds between idle twinkles on a random block, drawn from this range.")]
         [SerializeField] private Vector2 twinkleInterval = new Vector2(1.2f, 2.6f);
 
+        [Header("Feedback")]
+        [SerializeField] private float rejectedWiggle = 12f;
+        [SerializeField] private float rejectedWiggleDuration = 0.3f;
+
+        [Tooltip("Cells above the board the intro drop starts from, plus this much per column so the " +
+                 "columns land one after another rather than as a slab.")]
+        [SerializeField] private float dropInHeight = 2f;
+        [SerializeField] private float dropInColumnStagger = 0.45f;
+
+        [SerializeField] private float hintPulse = 0.08f;
+        [SerializeField] private float hintPeriod = 0.9f;
+
         [Header("Box hits")]
         [SerializeField] private float boxHitWiggle = 9f;
         [SerializeField] private float boxHitDuration = 0.35f;
@@ -178,6 +190,7 @@ namespace BlastGame.Game
             controller.OnBoardReady += HandleBoardReady;
             controller.OnBoardChanged += HandleBoardChanged;
             controller.OnDeadlockResolved += HandleDeadlockResolved;
+            controller.OnTapRejected += HandleTapRejected;
         }
 
         private void OnDisable()
@@ -185,6 +198,7 @@ namespace BlastGame.Game
             controller.OnBoardReady -= HandleBoardReady;
             controller.OnBoardChanged -= HandleBoardChanged;
             controller.OnDeadlockResolved -= HandleDeadlockResolved;
+            controller.OnTapRejected -= HandleTapRejected;
         }
 
         private void HandleBoardReady(Board readyBoard)
@@ -193,7 +207,19 @@ namespace BlastGame.Game
             Redraw();
         }
 
-        private void HandleBoardChanged(BlastResult result) => ApplyBlast(result);
+        private void HandleBoardChanged(BlastResult result)
+        {
+            HideHint();
+            ApplyBlast(result);
+        }
+
+        // A lone block or a Box shrugs off the tap. Only settled blocks reach here - TryPickCell
+        // swallows taps on anything still falling - so the wiggle never fights a fall.
+        private void HandleTapRejected(int cell)
+        {
+            if (blockAt[cell] == null) return;
+            effectRunner.Wiggle(blockAt[cell], rejectedWiggle, rejectedWiggleDuration);
+        }
 
         private void HandleDeadlockResolved() => BeginShuffleAnimation();
 
@@ -213,6 +239,10 @@ namespace BlastGame.Game
             if (pool == null)
             {
                 blockAt = new BlockView[board.CellCount];
+
+                hintCells = new int[board.CellCount];
+                hintStack = new int[board.CellCount];
+                hintMark = new int[board.CellCount];
 
                 movingBlocks = new BlockView[board.CellCount];
 
@@ -245,6 +275,7 @@ namespace BlastGame.Game
             if (board == null) throw new InvalidOperationException("Redraw before Bind.");
 
             fallAnimator.Clear();
+            HideHint();
 
             // Before the blocks are pooled. An effect borrowing one has to give it back at rest, or
             // the next cell to rent it inherits a squashed scale.
@@ -402,6 +433,7 @@ namespace BlastGame.Game
             effectRunner.Tick(deltaTime);
             TickShuffleAnimation(deltaTime);
             TickTwinkle(deltaTime);
+            TickHint(deltaTime);
             framing.Tick(deltaTime);
         }
 
@@ -443,6 +475,120 @@ namespace BlastGame.Game
             }
         }
 
+        // The level's entrance: every block starts above the board and falls into its cell through the
+        // same animator a move uses, landing squash included. A column starts a little higher than the
+        // one to its left, and a longer fall takes longer, so the board fills left to right without a
+        // delay mechanism of its own.
+        public void DropIn()
+        {
+            if (board == null) return;
+
+            HideHint();
+
+            float rise = board.Rows * CellSize + dropInHeight;
+
+            for (int i = 0; i < blockAt.Length; i++)
+            {
+                BlockView block = blockAt[i];
+                if (block == null) continue;
+
+                fallAnimator.Cancel(i);
+                effectRunner.Cancel(block);
+
+                int col = i % board.Cols;
+                Vector3 to = CellToWorld(i);
+                Vector3 from = to + new Vector3(0f, rise + col * dropInColumnStagger, 0f);
+
+                block.Position = from;
+                fallAnimator.Begin(block, from, to, i);
+            }
+        }
+
+        // --- hint -----------------------------------------------------------------------------
+
+        // The largest group on the board, found once when the hint starts and then pulsed until the
+        // player does anything. Found by the view rather than asked of Core: Core knows each cell's
+        // group size, and a flood fill over same-coloured neighbours recovers the members with
+        // arrays allocated at bind time.
+        private int[] hintCells;
+        private int[] hintStack;
+        private int[] hintMark;
+        private int hintStamp;
+        private int hintCount;
+        private float hintTime;
+
+        public void ShowHint()
+        {
+            if (board == null || IsShuffling) return;
+
+            HideHint();
+
+            int seed = -1;
+            int largest = 1;
+            for (int i = 0; i < board.CellCount; i++)
+            {
+                if (!board.IsBlastable(i) || board.GroupSizeAt(i) <= largest) continue;
+
+                largest = board.GroupSizeAt(i);
+                seed = i;
+            }
+
+            if (seed < 0) return;
+
+            byte color = board.CellAt(seed).Color;
+            hintStamp++;
+
+            int top = 0;
+            hintStack[top++] = seed;
+            hintMark[seed] = hintStamp;
+
+            while (top > 0)
+            {
+                int cell = hintStack[--top];
+                hintCells[hintCount++] = cell;
+
+                for (int direction = 0; direction < BlastGame.Core.Grid.DirectionCount; direction++)
+                {
+                    if (!board.TryNeighbor(cell, direction, out int next)) continue;
+                    if (hintMark[next] == hintStamp) continue;
+
+                    Cell neighbour = board.CellAt(next);
+                    if (!neighbour.IsColor || neighbour.Color != color) continue;
+
+                    hintMark[next] = hintStamp;
+                    hintStack[top++] = next;
+                }
+            }
+
+            hintTime = 0f;
+        }
+
+        public void HideHint()
+        {
+            for (int i = 0; i < hintCount; i++)
+            {
+                BlockView block = blockAt[hintCells[i]];
+                if (block != null) block.Scale = 1f;
+            }
+
+            hintCount = 0;
+        }
+
+        // A breath rather than a blink: up and back on a cosine, starting from rest.
+        private void TickHint(float deltaTime)
+        {
+            if (hintCount == 0) return;
+
+            hintTime += deltaTime;
+            float scale = 1f + hintPulse * (0.5f - 0.5f * Mathf.Cos(hintTime * 2f * Mathf.PI / hintPeriod));
+
+            for (int i = 0; i < hintCount; i++)
+            {
+                BlockView block = blockAt[hintCells[i]];
+                if (block != null) block.Scale = scale;
+            }
+        }
+
         // A fountain of confetti up from the middle of the board, for a win.
         public void Celebrate()
         {
@@ -479,6 +625,8 @@ namespace BlastGame.Game
         // unit meaning one cell, and a child under a zero-scaled parent is a division by zero.
         private void BeginShuffleAnimation()
         {
+            HideHint();
+
             // Landing squashes from the move that caused the shuffle are still running, and the
             // shuffle is about to take over every block's scale.
             effectRunner.CancelBorrowed();

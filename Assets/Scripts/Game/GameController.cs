@@ -28,6 +28,10 @@ namespace BlastGame.Game
 
         public event Action OnStatusChanged;
 
+        // A tap on a cell that could not be played: a lone block, a Box, a hole. Nothing changed in
+        // Core; the view answers so the tap does not feel lost.
+        public event Action<int> OnTapRejected;
+
         private GameSession session;
 
         public GameSession Session => session;
@@ -79,7 +83,11 @@ namespace BlastGame.Game
         public void TryBlastAt(int cellIndex)
         {
             TurnResult turn = session.Play(cellIndex);
-            if (!turn.Played) return;
+            if (!turn.Played)
+            {
+                OnTapRejected?.Invoke(cellIndex);
+                return;
+            }
 
             OnBoardChanged?.Invoke(session.Board.LastBlast);
 

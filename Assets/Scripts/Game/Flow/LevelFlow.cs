@@ -32,6 +32,9 @@ namespace BlastGame.Game
         [Tooltip("Seconds the goal banner holds before play starts.")]
         [SerializeField] private float introDuration = 1.2f;
 
+        [Tooltip("Seconds without a move before the largest group starts to pulse.")]
+        [SerializeField] private float hintDelay = 5f;
+
         [Tooltip("Seconds between the board settling and the end card, so the last blast is seen " +
                  "landing before anything covers it.")]
         [SerializeField] private float outcomeBeat = 0.4f;
@@ -53,6 +56,7 @@ namespace BlastGame.Game
 
         public float IntroDuration => introDuration;
         public float OutcomeBeat => outcomeBeat;
+        public float HintDelay => hintDelay;
 
         public BriefingState Briefing { get; private set; }
         public IntroState Intro { get; private set; }
@@ -91,8 +95,8 @@ namespace BlastGame.Game
         // Named methods, never lambdas, so every one of these can be removed again.
         private void OnEnable()
         {
-            controller.OnBoardReady += HandleBoardReady;
             controller.OnStatusChanged += HandleStatusChanged;
+            controller.OnTapRejected += HandleTapRejected;
 
             settingsButton.onClick.AddListener(HandleSettingsClicked);
 
@@ -109,8 +113,8 @@ namespace BlastGame.Game
 
         private void OnDisable()
         {
-            controller.OnBoardReady -= HandleBoardReady;
             controller.OnStatusChanged -= HandleStatusChanged;
+            controller.OnTapRejected -= HandleTapRejected;
 
             settingsButton.onClick.RemoveListener(HandleSettingsClicked);
 
@@ -127,7 +131,14 @@ namespace BlastGame.Game
 
         private void Update()
         {
-            if (current == null) return;
+            // The level starts on its first frame rather than on the board's ready event: the intro
+            // drops the drawn blocks, and nothing orders this listener after the view's. By the first
+            // Update every Start has run, so the board is built and drawn.
+            if (current == null)
+            {
+                if (controller.Session == null) return;
+                ChangeState(Intro);
+            }
 
             if (Input.GetKeyDown(KeyCode.Escape)) current.OnBack();
 
@@ -164,14 +175,9 @@ namespace BlastGame.Game
         // One-based for display; zero for a debug level.
         public int LevelNumber => controller.IsCampaign ? controller.CampaignIndex + 1 : 0;
 
-        // The first board of the scene starts the flow. A restart raises the same event, and by then a
-        // state is already running and decides for itself what follows.
-        private void HandleBoardReady(Board board)
-        {
-            if (current == null) ChangeState(Intro);
-        }
-
         private void HandleStatusChanged() => current?.OnStatusChanged(controller.Session.State);
+
+        private void HandleTapRejected(int cell) => current?.OnTapRejected();
 
         private void HandleSettingsClicked() => current?.OnSettingsPressed();
 
