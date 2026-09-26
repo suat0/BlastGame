@@ -48,6 +48,11 @@ namespace BlastGame.Game
         [Header("Framing")]
         [SerializeField] private Camera boardCamera;
 
+        [Tooltip("The part of the screen the board is fitted into: an invisible rect in the HUD between " +
+                 "its top bar and its bottom buttons. Moving it in the UI moves the board with it. " +
+                 "Without one, the board is fitted to the whole screen.")]
+        [SerializeField] private RectTransform boardArea;
+
         [Tooltip("World units of empty space around the board.")]
         [SerializeField] private float cameraPadding = 0.5f;
 
@@ -56,6 +61,17 @@ namespace BlastGame.Game
         [SerializeField] private SpriteRenderer boardFrame;
 
         [SerializeField] private float framePadding = 0.3f;
+
+        [Tooltip("Drawn under every cell, holes included, so the board keeps its shape when a column " +
+                 "under a Box stays empty. From the block atlas, so the tiles join the board's batch.")]
+        [SerializeField] private Sprite cellTile;
+
+        [SerializeField] private Color tileLight = new Color32(0x3A, 0x2A, 0x7A, 0xFF);
+        [SerializeField] private Color tileDark = new Color32(0x2E, 0x21, 0x66, 0xFF);
+
+        [Tooltip("Below the blocks and above the frame. Only the order changes - the material is the " +
+                 "same - so the three layers still draw as one batch.")]
+        [SerializeField] private int tileSortingOrder = -5;
 
         [Header("Motion")]
         [Tooltip("Fall acceleration in cells per second squared. Distance still sets the duration, " +
@@ -110,12 +126,21 @@ namespace BlastGame.Game
 
         private BlockView[] blockAt;
 
+        private SpriteRenderer[] tiles;
+
         // Centre of cell (0, 0) in world space. Row 0 is the bottom row, as everywhere else.
         private Vector3 origin;
 
         private float shuffleElapsed = NotShuffling;
 
         private BoardCamera framing;
+
+        // The framing depends on where the UI puts the board area, which the canvas scaler only knows
+        // after its own update. So a bind asks for framing and LateUpdate does it - also whenever the
+        // screen size changes, as a resized editor window or a rotation does.
+        private bool framingDirty;
+        private Vector2Int framedScreen;
+        private readonly Vector3[] areaCorners = new Vector3[4];
 
         private bool shuffleRedrawn;
 
@@ -190,8 +215,9 @@ namespace BlastGame.Game
                 framing = new BoardCamera(boardCamera, cameraPadding, shakeMagnitude, shakeDuration);
             }
 
-            framing.Frame(board.Rows, board.Cols, CellSize, transform.position);
+            framingDirty = true;
             FitFrame();
+            LayTiles();
         }
 
         // A full rebuild, for the first draw and the post-shuffle redraw. Ordinary moves go through
@@ -311,6 +337,40 @@ namespace BlastGame.Game
         }
 
         // The single per-frame loop for the whole board. No block has an Update of its own.
+        private void LateUpdate()
+        {
+            if (board == null) return;
+
+            if (framingDirty || Screen.width != framedScreen.x || Screen.height != framedScreen.y)
+                Reframe();
+        }
+
+        public void Reframe()
+        {
+            framingDirty = false;
+            framedScreen = new Vector2Int(Screen.width, Screen.height);
+
+            framing.Frame(board.Rows, board.Cols, CellSize, transform.position, BoardAreaOnScreen());
+        }
+
+        // The area's rectangle in screen pixels. Asked of the canvas's camera, so it holds for an
+        // overlay canvas and a camera-space one alike.
+        private Rect BoardAreaOnScreen()
+        {
+            if (boardArea == null) return default;
+
+            Canvas canvas = boardArea.GetComponentInParent<Canvas>();
+            Camera uiCamera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? canvas.worldCamera
+                : null;
+
+            boardArea.GetWorldCorners(areaCorners);
+            Vector2 min = RectTransformUtility.WorldToScreenPoint(uiCamera, areaCorners[0]);
+            Vector2 max = RectTransformUtility.WorldToScreenPoint(uiCamera, areaCorners[2]);
+
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+
         private void Update()
         {
             if (fallAnimator == null) return;   // before Bind
@@ -439,6 +499,39 @@ namespace BlastGame.Game
             if (!cell.IsColor) return null;
 
             return colorSprites[cell.Color].ForTier(board.TierAt(index));
+        }
+
+        // Created with the pool and only repositioned after that. A checkerboard, as boards in the
+        // genre are, so the eye can count columns without the grid lines a flat well would need.
+        private void LayTiles()
+        {
+            if (cellTile == null) return;
+
+            if (tiles == null)
+            {
+                var root = new GameObject("Tiles").transform;
+                root.SetParent(transform, false);
+
+                tiles = new SpriteRenderer[board.CellCount];
+                for (int i = 0; i < tiles.Length; i++)
+                {
+                    var tile = new GameObject("Tile", typeof(SpriteRenderer));
+                    tile.transform.SetParent(root, false);
+
+                    tiles[i] = tile.GetComponent<SpriteRenderer>();
+                    tiles[i].sprite = cellTile;
+                    tiles[i].sortingOrder = tileSortingOrder;
+                }
+            }
+
+            for (int i = 0; i < tiles.Length; i++)
+            {
+                int row = i / board.Cols;
+                int col = i - row * board.Cols;
+
+                tiles[i].transform.position = CellToWorld(i);
+                tiles[i].color = (row + col) % 2 == 0 ? tileLight : tileDark;
+            }
         }
 
         // Sized from the board rather than authored in the scene, so a 2x2 level and a 10x10 level

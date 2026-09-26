@@ -37,18 +37,39 @@ namespace BlastGame.Game
             this.shakeDuration = shakeDuration;
         }
 
-        // orthographicSize is the half-height in world units, so the width has to be divided by the
-        // aspect ratio to be comparable. A 10x2 board is limited by width, a 2x10 board by height.
-        public void Frame(int rows, int cols, float cellSize, Vector3 center)
+        // Fits the board, plus padding, into a region of the screen given in pixels - the space the UI
+        // leaves between its top bar and its bottom buttons - and centres it there. The board is never
+        // scaled; the camera zooms and slides so that one world unit stays one cell.
+        //
+        // orthographicSize is the half-height in world units, so each need is turned into the
+        // half-height the whole screen would have to show for the board to fit the region.
+        public void Frame(int rows, int cols, float cellSize, Vector3 center, Rect screenRegion)
         {
+            float screenHeight = camera.pixelHeight;
+            float screenWidth = camera.pixelWidth;
+
+            if (screenRegion.width <= 0f || screenRegion.height <= 0f)
+                screenRegion = new Rect(0f, 0f, screenWidth, screenHeight);
+
             // The padding joins each need before the comparison. Added to the result instead it would
             // be half-height either way, which on a portrait screen shrinks to a fraction of itself
             // horizontally, and a wide board would touch both edges.
-            float verticalNeed = rows * 0.5f * cellSize + padding;
-            float horizontalNeed = (cols * 0.5f * cellSize + padding) / camera.aspect;
+            float boardHeight = rows * cellSize + padding * 2f;
+            float boardWidth = cols * cellSize + padding * 2f;
 
-            camera.orthographicSize = Mathf.Max(verticalNeed, horizontalNeed);
+            float verticalNeed = boardHeight * 0.5f * screenHeight / screenRegion.height;
+            float horizontalNeed = boardWidth * 0.5f * screenHeight / screenRegion.width;
 
+            float size = Mathf.Max(verticalNeed, horizontalNeed);
+            camera.orthographicSize = size;
+
+            // Slide the camera so the board's centre lands on the region's centre instead of the
+            // screen's.
+            float unitsPerPixel = 2f * size / screenHeight;
+            Vector2 offset = (screenRegion.center - new Vector2(screenWidth, screenHeight) * 0.5f) * unitsPerPixel;
+
+            center.x -= offset.x;
+            center.y -= offset.y;
             center.z = camera.transform.position.z;
 
             basePosition = center;

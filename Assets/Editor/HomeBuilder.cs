@@ -61,14 +61,19 @@ namespace BlastGame.Game.EditorTools
 
             BuildBackdrop(root);
 
+            // Backgrounds above run to the screen edges; everything after this sits in the safe area.
+            RectTransform safe = UiBuild.Rect("Safe", root);
+            UiBuild.Stretch(safe, 0f, 0f);
+            safe.gameObject.AddComponent<SafeArea>();
+
             // Built before the buttons that point at it.
             toast = BuildToast(root);
 
-            BuildTitle(root);
-            CoinCounter coins = BuildTopBar(root, out Button settings);
-            BuildEvents(root);
-            Button levelButton = BuildLevelButton(root, out GameObject hardTag);
-            BuildNavBar(root);
+            BuildTitle(safe);
+            CoinCounter coins = BuildTopBar(safe, out Button settings);
+            BuildEvents(safe);
+            Button levelButton = BuildLevelButton(safe, out GameObject hardTag);
+            BuildNavBar(safe);
 
             Canvas popups = UiBuild.CreateCanvas("Popups", null, 10);
             var start = Instantiate<LevelStartPopup>(PopupBuilder.LevelStartPath, popups.transform);

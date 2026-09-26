@@ -49,8 +49,15 @@ namespace BlastGame.Game.EditorTools
             for (int i = hudCanvas.childCount - 1; i >= 0; i--)
                 Object.DestroyImmediate(hudCanvas.GetChild(i).gameObject);
 
-            BuildTopBar(hudCanvas, out TMP_Text moves, out TMP_Text objective, out GameObject objectiveGroup);
-            Button settings = BuildSettingsButton(hudCanvas);
+            // Everything tappable or readable sits inside the safe area; nothing in the HUD runs to the
+            // screen edge, so the whole HUD goes under it.
+            RectTransform safe = UiBuild.Rect("Safe", hudCanvas);
+            UiBuild.Stretch(safe, 0f, 0f);
+            safe.gameObject.AddComponent<SafeArea>();
+
+            BuildTopBar(safe, out TMP_Text moves, out TMP_Text objective, out GameObject objectiveGroup);
+            Button settings = BuildSettingsButton(safe);
+            RectTransform boardArea = BuildBoardArea(safe);
 
             var hudSo = new SerializedObject(hud);
             hudSo.FindProperty("movesLabel").objectReferenceValue = moves;
@@ -59,7 +66,7 @@ namespace BlastGame.Game.EditorTools
             hudSo.ApplyModifiedPropertiesWithoutUndo();
 
             BuildFlow(settings);
-            BuildBackdrop();
+            BuildBackdrop(boardArea);
 
             Camera camera = Camera.main;
             if (camera != null) camera.backgroundColor = Sky;
@@ -241,7 +248,19 @@ namespace BlastGame.Game.EditorTools
 
         // The gradient behind everything and the well the grid sits in. Both use sprites from
         // BlockAtlas, so they share the blocks' material and cost no extra draw call.
-        private static void BuildBackdrop()
+        // Invisible: the space between the top bar and the settings button, which the camera fits the
+        // board into. Moving this moves the board.
+        private static RectTransform BuildBoardArea(Transform safe)
+        {
+            RectTransform area = UiBuild.Rect("BoardArea", safe);
+            area.anchorMin = Vector2.zero;
+            area.anchorMax = Vector2.one;
+            area.offsetMin = new Vector2(20f, 230f);     // above the settings button
+            area.offsetMax = new Vector2(-20f, -310f);   // below the top bar
+            return area;
+        }
+
+        private static void BuildBackdrop(RectTransform boardArea)
         {
             var boardView = Object.FindFirstObjectByType<BoardView>();
             Transform game = boardView.transform;
@@ -271,6 +290,8 @@ namespace BlastGame.Game.EditorTools
 
             var so = new SerializedObject(boardView);
             so.FindProperty("boardFrame").objectReferenceValue = frameRenderer;
+            so.FindProperty("boardArea").objectReferenceValue = boardArea;
+            so.FindProperty("cellTile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Cell.png");
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

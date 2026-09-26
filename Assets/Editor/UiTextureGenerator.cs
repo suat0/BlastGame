@@ -5,18 +5,20 @@ using UnityEngine;
 
 namespace BlastGame.Game.EditorTools
 {
-    // Generates the two shapes the board needs behind it. Written as code and dropped into the block
+    // Generates the shapes the board needs behind it. Written as code and dropped into the block
     // folder on purpose: everything in Assets/Art is packed into BlockAtlas, so the backdrop and the
     // frame share the blocks' material and the whole game world stays one draw call.
     public static class UiTextureGenerator
     {
         private const string BackdropPath = "Assets/Art/Backdrop.png";
         private const string FramePath = "Assets/Art/Frame.png";
+        private const string CellPath = "Assets/Art/Cell.png";
 
         public static void Generate()
         {
             WriteBackdrop();
             WriteFrame();
+            WriteCell();
 
             AssetDatabase.Refresh();
 
@@ -28,7 +30,10 @@ namespace BlastGame.Game.EditorTools
             // any board size.
             ConfigureSprite(FramePath, 64f, new Vector4(20f, 20f, 20f, 20f));
 
-            Debug.Log("Backdrop and frame written.");
+            // Sixty-four pixels per unit on a sixty-four pixel tile: one tile, one cell.
+            ConfigureSprite(CellPath, 64f, Vector4.zero);
+
+            Debug.Log("Backdrop, frame and cell tile written.");
         }
 
         // Vertical gradient, darkest at the bottom. Lifting the top separates the board from the HUD
@@ -81,6 +86,39 @@ namespace BlastGame.Game.EditorTools
 
             texture.Apply();
             File.WriteAllBytes(FramePathSafe(FramePath), texture.EncodeToPNG());
+        }
+
+        // The tile under each cell of the board. White so the board tints it into a checkerboard, a
+        // little inset so neighbouring tiles read as separate, and lit from the top so it reads as a
+        // shallow well the block sits in. In Assets/Art like the rest, so it packs into BlockAtlas and
+        // a hundred of them cost no draw call of their own.
+        private static void WriteCell()
+        {
+            const int Size = 64;
+            const float Inset = 2f;
+            const float Radius = 10f;
+
+            var texture = new Texture2D(Size, Size, TextureFormat.RGBA32, false);
+
+            for (int y = 0; y < Size; y++)
+            {
+                for (int x = 0; x < Size; x++)
+                {
+                    float lo = Inset + Radius, hi = Size - Inset - Radius;
+                    float dx = Mathf.Max(lo - (x + 0.5f), (x + 0.5f) - hi);
+                    float dy = Mathf.Max(lo - (y + 0.5f), (y + 0.5f) - hi);
+
+                    float outside = Mathf.Sqrt(Mathf.Max(dx, 0f) * Mathf.Max(dx, 0f) +
+                                               Mathf.Max(dy, 0f) * Mathf.Max(dy, 0f)) - Radius;
+
+                    float alpha = Mathf.Clamp01(0.5f - outside);
+                    float shade = Mathf.Lerp(0.82f, 1f, y / (Size - 1f));
+                    texture.SetPixel(x, y, new Color(shade, shade, shade, alpha));
+                }
+            }
+
+            texture.Apply();
+            File.WriteAllBytes(FramePathSafe(CellPath), texture.EncodeToPNG());
         }
 
         private static void ConfigureSprite(string path, float pixelsPerUnit, Vector4 border)
