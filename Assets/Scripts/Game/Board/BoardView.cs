@@ -101,6 +101,24 @@ namespace BlastGame.Game
 
         [SerializeField] private float landingSquashDuration = 0.12f;
 
+        [Header("Particles")]
+        [Tooltip("Optional. Without it the board still pops and throws shards; it just has no sparkle.")]
+        [SerializeField] private Vfx vfx;
+
+        [Tooltip("Sparkles per blasted block. Capped by the particle system itself on a full-board blast.")]
+        [SerializeField] private int sparklesPerBlock = 2;
+
+        [SerializeField] private Color blastGlow = new Color(1f, 0.93f, 0.7f, 0.9f);
+
+        [Tooltip("Seconds between idle twinkles on a random block, drawn from this range.")]
+        [SerializeField] private Vector2 twinkleInterval = new Vector2(1.2f, 2.6f);
+
+        [Header("Box hits")]
+        [SerializeField] private float boxHitWiggle = 9f;
+        [SerializeField] private float boxHitDuration = 0.35f;
+        [SerializeField] private int splintersPerHit = 5;
+        [SerializeField] private int splintersPerBreak = 12;
+
         [Header("Camera shake")]
         [Tooltip("Cell fractions the camera swings at the start of a shake.")]
         [SerializeField] private float shakeMagnitude = 0.09f;
@@ -260,9 +278,12 @@ namespace BlastGame.Game
         {
             if (board == null) throw new InvalidOperationException("ApplyBlast before Bind.");
 
+            BurstBlast(result);
+
             ReleaseBlocksAt(result.Removed, shardsPerBlock);
 
             // A Box takes two moves to break, so its one break is worth more than a colour block's.
+            BurstBoxes(result);
             ReleaseBlocksAt(result.BrokenBoxes, shardsPerBox);
 
             ReadOnlySpan<int> from = result.MoveFrom;
@@ -380,7 +401,74 @@ namespace BlastGame.Game
             fallAnimator.Tick(deltaTime);
             effectRunner.Tick(deltaTime);
             TickShuffleAnimation(deltaTime);
+            TickTwinkle(deltaTime);
             framing.Tick(deltaTime);
+        }
+
+        // Particles for a blast, read before the blocks are released: a glow where the tap landed,
+        // sized by the group, and sparkles from every block in it.
+        private void BurstBlast(BlastResult result)
+        {
+            if (vfx == null) return;
+
+            ReadOnlySpan<int> removed = result.Removed;
+            for (int i = 0; i < removed.Length; i++)
+                vfx.Sparkles(CellToWorld(removed[i]), sparklesPerBlock);
+
+            float size = 1.4f + 0.18f * result.BlastedGroupSize;
+            vfx.Glow(CellToWorld(result.TappedIndex), size, blastGlow);
+        }
+
+        // A hit Box rocks and throws splinters; a broken one throws more and leaves dust. The damaged
+        // list holds survivors only, so no Box gets both.
+        private void BurstBoxes(BlastResult result)
+        {
+            ReadOnlySpan<int> damaged = result.DamagedBoxes;
+            for (int i = 0; i < damaged.Length; i++)
+            {
+                int cell = damaged[i];
+
+                effectRunner.Wiggle(blockAt[cell], boxHitWiggle, boxHitDuration);
+                if (vfx != null) vfx.Splinters(CellToWorld(cell), splintersPerHit);
+            }
+
+            if (vfx == null) return;
+
+            ReadOnlySpan<int> broken = result.BrokenBoxes;
+            for (int i = 0; i < broken.Length; i++)
+            {
+                Vector3 where = CellToWorld(broken[i]);
+                vfx.Splinters(where, splintersPerBreak);
+                vfx.Dust(where, 3);
+            }
+        }
+
+        // A fountain of confetti up from the middle of the board, for a win.
+        public void Celebrate()
+        {
+            if (vfx == null || board == null) return;
+
+            vfx.Confetti(transform.position - new Vector3(0f, board.Rows * 0.25f * CellSize, 0f), 160);
+        }
+
+        private float twinkleIn = 1f;
+
+        // Now and then a glint on a random block, so a board nobody is touching still looks alive.
+        // Only on settled colour blocks, and never during a shuffle.
+        private void TickTwinkle(float deltaTime)
+        {
+            if (vfx == null || IsShuffling) return;
+
+            twinkleIn -= deltaTime;
+            if (twinkleIn > 0f) return;
+
+            twinkleIn = UnityEngine.Random.Range(twinkleInterval.x, twinkleInterval.y);
+
+            int cell = UnityEngine.Random.Range(0, board.CellCount);
+            if (blockAt[cell] == null || !board.CellAt(cell).IsColor || !fallAnimator.IsSettled(cell)) return;
+
+            // The upper-right corner, where the block art catches its highlight.
+            vfx.Sparkles(CellToWorld(cell) + new Vector3(0.28f, 0.28f, 0f), 1);
         }
 
         // A shuffle swaps colour values rather than moving blocks, so without feedback the whole board

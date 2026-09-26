@@ -3,7 +3,8 @@ using UnityEngine;
 
 namespace BlastGame.Game
 {
-    // Short cosmetic animations - a blasted block popping, its shards flying, a landed block squashing.
+    // Short cosmetic animations - a blasted block popping, its shards flying, a landed block squashing,
+    // a hit Box rocking.
     // Same shape as FallAnimator: a preallocated struct array walked by one Tick.
     //
     // Not a ParticleSystem, because that draws with its own material and would split the board's single
@@ -18,7 +19,8 @@ namespace BlastGame.Game
         {
             Pop,      // a blasted block: swells, then shrinks away while fading
             Shard,    // a fragment thrown from the blast, under gravity, spinning
-            Squash    // a landed block flexing; the block belongs to the board, not to us
+            Squash,   // a landed block flexing; the block belongs to the board, not to us
+            Wiggle    // a board block rocking side to side: a Box taking a hit, a tap that did nothing
         }
 
         private struct Effect
@@ -130,6 +132,26 @@ namespace BlastGame.Game
             });
         }
 
+        // A board block rocking about its centre and settling, borrowed like a Squash and handed back
+        // upright. degrees is the first swing; each one after is smaller.
+        public void Wiggle(BlockView block, float degrees, float duration)
+        {
+            if (block == null) return;
+
+            Cancel(block);
+
+            if (count == effects.Length) return;
+
+            Add(new Effect
+            {
+                Block = block,
+                Kind = Kind.Wiggle,
+                Owned = false,
+                Duration = duration,
+                Scale = degrees
+            });
+        }
+
         // Called before a board block is pooled or redrawn. A Squash left running on a block that has
         // since been rented to another cell would keep writing that cell's scale.
         public void Cancel(BlockView block)
@@ -140,7 +162,7 @@ namespace BlastGame.Game
             {
                 if (effects[i].Owned || effects[i].Block != block) continue;
 
-                block.Scale = 1f;
+                Release(block);
                 RemoveAt(i);
             }
         }
@@ -154,7 +176,7 @@ namespace BlastGame.Game
             {
                 if (effects[i].Owned) continue;
 
-                effects[i].Block.Scale = 1f;
+                Release(effects[i].Block);
                 RemoveAt(i);
             }
         }
@@ -165,7 +187,7 @@ namespace BlastGame.Game
             for (int i = 0; i < count; i++)
             {
                 if (effects[i].Owned) pool.Return(effects[i].Block);
-                else effects[i].Block.Scale = 1f;
+                else Release(effects[i].Block);
 
                 effects[i].Block = null;   // the array outlives the effect
             }
@@ -193,6 +215,7 @@ namespace BlastGame.Game
                     case Kind.Pop: TickPop(ref effect, t); break;
                     case Kind.Shard: TickShard(ref effect, deltaTime, t); break;
                     case Kind.Squash: TickSquash(ref effect, t); break;
+                    case Kind.Wiggle: TickWiggle(ref effect, t); break;
                 }
             }
         }
@@ -249,6 +272,22 @@ namespace BlastGame.Game
             effect.Block.SetScale(1f + amount, 1f - amount);
         }
 
+        // Three and a half swings under a decaying envelope, ending exactly upright.
+        private static void TickWiggle(ref Effect effect, float t)
+        {
+            const float Swings = 3.5f;
+
+            float envelope = 1f - t;
+            effect.Block.Rotation = effect.Scale * envelope * Mathf.Sin(t * Swings * 2f * Mathf.PI);
+        }
+
+        // A borrowed board block goes back exactly as the board drew it: full size, upright.
+        private static void Release(BlockView block)
+        {
+            block.Scale = 1f;
+            block.Rotation = 0f;
+        }
+
         private bool TryTakeSprite(Sprite sprite, Vector3 position, float scale, out BlockView block)
         {
             block = null;
@@ -277,7 +316,7 @@ namespace BlastGame.Game
             ref Effect effect = ref effects[index];
 
             if (effect.Owned) pool.Return(effect.Block);
-            else effect.Block.Scale = 1f;   // hand the board back a block at rest
+            else Release(effect.Block);   // hand the board back a block at rest
 
             RemoveAt(index);
         }

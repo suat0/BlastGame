@@ -24,6 +24,7 @@ namespace BlastGame.Game.EditorTools
 
             PopupBuilder.Build();
             LevelBuilder.Build();
+            VfxBuilder.Build();
             HomeBuilder.Build();
         }
     }
