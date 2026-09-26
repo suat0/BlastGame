@@ -29,6 +29,9 @@ namespace BlastGame.Game.EditorTools
         private static readonly Color CardEdge = UiBuild.Hex("#E3A92B");
         private static readonly Color CardFill = UiBuild.Hex("#5B3FB8");
         private static readonly Color CardInset = UiBuild.Hex("#4A2F9E");
+        private static readonly Color CardShadow = UiBuild.Hex("#2A1B5C");
+
+        private const float RimWidth = 12f;
         private static readonly Color Heading = Color.white;
         private static readonly Color Body = UiBuild.Hex("#E6DDFF");
         private static readonly Color Gold = UiBuild.Hex("#FFD84D");
@@ -200,10 +203,14 @@ namespace BlastGame.Game.EditorTools
             card = UiBuild.Rect("Card", root.transform);
             Place(card, new Vector2(0.5f, 0.5f), cardSize, Vector2.zero);
 
-            UiBuild.Panel("Edge", card, CardEdge, 0f, -14f);
+            // Three layers: a dark drop shadow offset downwards, a gold rim the exact size of the card,
+            // and the purple face inset evenly inside the rim. The rim is never offset itself, or the
+            // face sits off-centre in it.
+            UiBuild.Panel("Shadow", card, CardShadow, 0f, -14f);
+            UiBuild.Panel("Edge", card, CardEdge, 0f, 0f);
             RectTransform fill = UiBuild.Panel("Fill", card, CardFill, 0f, 0f);
-            fill.offsetMin += new Vector2(10f, 10f);
-            fill.offsetMax -= new Vector2(10f, 10f);
+            fill.offsetMin = new Vector2(RimWidth, RimWidth);
+            fill.offsetMax = new Vector2(-RimWidth, -RimWidth);
 
             T popup = root.AddComponent<T>();
             var so = new SerializedObject(popup);

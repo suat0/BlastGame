@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace BlastGame.Game.EditorTools
@@ -12,6 +13,18 @@ namespace BlastGame.Game.EditorTools
         {
             PlayerProgress.ResetAll();
             Debug.Log("Progress reset.");
+        }
+
+        // The popups first, since both scenes instantiate them. The builders open and replace scenes,
+        // so unsaved changes are offered for saving before anything is touched.
+        [MenuItem("Tools/Blast/Rebuild UI")]
+        private static void RebuildUi()
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+
+            PopupBuilder.Build();
+            LevelBuilder.Build();
+            HomeBuilder.Build();
         }
     }
 }
