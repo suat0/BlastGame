@@ -4,7 +4,8 @@
     "references": [
         "GUID:a9fcde201718c484c9c03d858b722795",
         "UnityEngine.UI",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "PrimeTween.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
