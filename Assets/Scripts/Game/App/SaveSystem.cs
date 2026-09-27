@@ -41,7 +41,7 @@ namespace BlastGame.Game
                 if (File.Exists(MainPath)) File.Replace(TempPath, MainPath, BackupPath);
                 else File.Move(TempPath, MainPath);
             }
-            catch (IOException e)
+            catch (Exception e) when (IsFileError(e))
             {
                 // A full disk or a revoked permission. The game keeps running on what is in memory;
                 // losing a save is bad, crashing the level the player is in is worse.
@@ -51,10 +51,22 @@ namespace BlastGame.Game
 
         public static void Delete()
         {
-            File.Delete(MainPath);
-            File.Delete(TempPath);
-            File.Delete(BackupPath);
+            try
+            {
+                File.Delete(MainPath);
+                File.Delete(TempPath);
+                File.Delete(BackupPath);
+            }
+            catch (Exception e) when (IsFileError(e))
+            {
+                // The reset still happens in memory; the file is overwritten by the next save.
+                Debug.LogError($"Delete failed: {e.Message}");
+            }
         }
+
+        // A revoked permission is not an IOException, so catching IOException alone lets exactly the
+        // failure the comments above name escape as a crash.
+        private static bool IsFileError(Exception e) => e is IOException || e is UnauthorizedAccessException;
 
         private static bool TryRead(string path, out SaveData data)
         {
@@ -69,7 +81,7 @@ namespace BlastGame.Game
             {
                 return false;   // malformed JSON
             }
-            catch (IOException)
+            catch (Exception e) when (IsFileError(e))
             {
                 return false;
             }
