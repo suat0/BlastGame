@@ -77,7 +77,7 @@ namespace BlastGame.Game.UI
         // Read during the call and not kept - the result is Core's single reused instance.
         private void HandleBoardChanged(BlastResult result)
         {
-            tapWorld = boardView.WorldOfCell(result.TappedIndex);
+            tapWorld = boardView.CellToWorld(result.TappedIndex);
             groupSize = result.BlastedGroupSize;
         }
 

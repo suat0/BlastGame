@@ -162,8 +162,6 @@ namespace BlastGame.Game
 
         public Camera Camera => boardCamera;
 
-        public Vector3 WorldOfCell(int cell) => CellToWorld(cell);
-
         private Board board;
         private BlockPool pool;
         private FallAnimator fallAnimator;
@@ -175,7 +173,8 @@ namespace BlastGame.Game
 
         private BlockView[] blockAt;
 
-        private SpriteRenderer[] tiles;
+        private BoardHint hint;
+        private BoardDecor decor;
 
         // Centre of cell (0, 0) in world space. Row 0 is the bottom row, as everywhere else.
         private Vector3 origin;
@@ -228,7 +227,7 @@ namespace BlastGame.Game
 
         private void HandleBoardChanged(BlastResult result)
         {
-            HideHint();
+            hint.Hide();
             ApplyBlast(result);
         }
 
@@ -260,9 +259,9 @@ namespace BlastGame.Game
             {
                 blockAt = new BlockView[board.CellCount];
 
-                hintCells = new int[board.CellCount];
-                hintStack = new int[board.CellCount];
-                hintMark = new int[board.CellCount];
+                hint = new BoardHint(blockAt, hintPulse, hintPeriod);
+                decor = new BoardDecor(transform, boardFrame, framePadding, boardMask, boardTrim, trimPadding,
+                                       cellTile, tileLight, tileDark, tileSortingOrder);
 
                 movingBlocks = new BlockView[board.CellCount];
 
@@ -285,8 +284,7 @@ namespace BlastGame.Game
             }
 
             framingDirty = true;
-            FitFrame();
-            LayTiles();
+            decor.Fit(board, transform.position, origin, CellSize);
         }
 
         // A full rebuild, for the first draw and the post-shuffle redraw. Ordinary moves go through
@@ -296,7 +294,7 @@ namespace BlastGame.Game
             if (board == null) throw new InvalidOperationException("Redraw before Bind.");
 
             fallAnimator.Clear();
-            HideHint();
+            hint.Hide();
 
             // Before the blocks are pooled. An effect borrowing one has to give it back at rest, or
             // the next cell to rent it inherits a squashed scale.
@@ -405,9 +403,9 @@ namespace BlastGame.Game
             int col = Mathf.FloorToInt((world.x - origin.x) / CellSize + 0.5f);
             int row = Mathf.FloorToInt((world.y - origin.y) / CellSize + 0.5f);
 
-            if (row < 0 || row >= board.Rows || col < 0 || col >= board.Cols) return false;
+            if (!board.InBounds(row, col)) return false;
 
-            int candidate = row * board.Cols + col;
+            int candidate = board.Index(row, col);
             if (!fallAnimator.IsSettled(candidate)) return false;
 
             cellIndex = candidate;
@@ -459,7 +457,7 @@ namespace BlastGame.Game
             effectRunner.Tick(deltaTime);
             TickShuffleAnimation(deltaTime);
             TickTwinkle(deltaTime);
-            TickHint(deltaTime);
+            hint.Tick(deltaTime);
             framing.Tick(deltaTime);
         }
 
@@ -513,7 +511,7 @@ namespace BlastGame.Game
         {
             if (board == null) return;
 
-            HideHint();
+            hint.Hide();
 
             float rise = board.Rows * CellSize + dropInHeight;
 
@@ -525,99 +523,22 @@ namespace BlastGame.Game
                 fallAnimator.Cancel(i);
                 effectRunner.Cancel(block);
 
-                int col = i % board.Cols;
                 Vector3 to = CellToWorld(i);
-                Vector3 from = to + new Vector3(0f, rise + col * dropInColumnStagger, 0f);
+                Vector3 from = to + new Vector3(0f, rise + board.ColOf(i) * dropInColumnStagger, 0f);
 
                 block.Position = from;
                 fallAnimator.Begin(block, from, to, i);
             }
         }
 
-        // --- hint -----------------------------------------------------------------------------
-
-        // The largest group on the board, found once when the hint starts and then pulsed until the
-        // player does anything. Found by the view rather than asked of Core: Core knows each cell's
-        // group size, and a flood fill over same-coloured neighbours recovers the members with
-        // arrays allocated at bind time.
-        private int[] hintCells;
-        private int[] hintStack;
-        private int[] hintMark;
-        private int hintStamp;
-        private int hintCount;
-        private float hintTime;
-
+        // Never during a shuffle: the hint would point at colours about to be swapped away.
         public void ShowHint()
         {
             if (board == null || IsShuffling) return;
-
-            HideHint();
-
-            int seed = -1;
-            int largest = 1;
-            for (int i = 0; i < board.CellCount; i++)
-            {
-                if (!board.IsBlastable(i) || board.GroupSizeAt(i) <= largest) continue;
-
-                largest = board.GroupSizeAt(i);
-                seed = i;
-            }
-
-            if (seed < 0) return;
-
-            byte color = board.CellAt(seed).Color;
-            hintStamp++;
-
-            int top = 0;
-            hintStack[top++] = seed;
-            hintMark[seed] = hintStamp;
-
-            while (top > 0)
-            {
-                int cell = hintStack[--top];
-                hintCells[hintCount++] = cell;
-
-                for (int direction = 0; direction < BlastGame.Core.Grid.DirectionCount; direction++)
-                {
-                    if (!board.TryNeighbor(cell, direction, out int next)) continue;
-                    if (hintMark[next] == hintStamp) continue;
-
-                    Cell neighbour = board.CellAt(next);
-                    if (!neighbour.IsColor || neighbour.Color != color) continue;
-
-                    hintMark[next] = hintStamp;
-                    hintStack[top++] = next;
-                }
-            }
-
-            hintTime = 0f;
+            hint.Show(board);
         }
 
-        public void HideHint()
-        {
-            for (int i = 0; i < hintCount; i++)
-            {
-                BlockView block = blockAt[hintCells[i]];
-                if (block != null) block.Scale = 1f;
-            }
-
-            hintCount = 0;
-        }
-
-        // A breath rather than a blink: up and back on a cosine, starting from rest.
-        private void TickHint(float deltaTime)
-        {
-            if (hintCount == 0) return;
-
-            hintTime += deltaTime;
-            float scale = 1f + hintPulse * (0.5f - 0.5f * Mathf.Cos(hintTime * 2f * Mathf.PI / hintPeriod));
-
-            for (int i = 0; i < hintCount; i++)
-            {
-                BlockView block = blockAt[hintCells[i]];
-                if (block != null) block.Scale = scale;
-            }
-        }
+        public void HideHint() => hint?.Hide();
 
         // A fountain of confetti up from the middle of the board, for a win.
         public void Celebrate()
@@ -656,7 +577,7 @@ namespace BlastGame.Game
         private void BeginShuffleAnimation()
         {
             Sfx.Play(SfxId.Shuffle);
-            HideHint();
+            hint.Hide();
 
             // Landing squashes from the move that caused the shuffle are still running, and the
             // shuffle is about to take over every block's scale.
@@ -752,12 +673,7 @@ namespace BlastGame.Game
 
         // Valid for rows above the board, which is where new blocks start.
         public Vector3 CellToWorld(int index)
-        {
-            int row = index / board.Cols;
-            int col = index - row * board.Cols;
-
-            return origin + new Vector3(col * CellSize, row * CellSize, 0f);
-        }
+            => origin + new Vector3(board.ColOf(index) * CellSize, board.RowOf(index) * CellSize, 0f);
 
         // Tier is asked of Core per cell rather than cached: three comparisons over data Core already
         // has, where a local copy would go stale silently, as a wrong sprite.
@@ -769,65 +685,6 @@ namespace BlastGame.Game
             if (!cell.IsColor) return null;
 
             return colorSprites[cell.Color].ForTier(board.TierAt(index));
-        }
-
-        // Created with the pool and only repositioned after that. A checkerboard, as boards in the
-        // genre are, so the eye can count columns without the grid lines a flat well would need.
-        private void LayTiles()
-        {
-            if (cellTile == null) return;
-
-            if (tiles == null)
-            {
-                var root = new GameObject("Tiles").transform;
-                root.SetParent(transform, false);
-
-                tiles = new SpriteRenderer[board.CellCount];
-                for (int i = 0; i < tiles.Length; i++)
-                {
-                    var tile = new GameObject("Tile", typeof(SpriteRenderer));
-                    tile.transform.SetParent(root, false);
-
-                    tiles[i] = tile.GetComponent<SpriteRenderer>();
-                    tiles[i].sprite = cellTile;
-                    tiles[i].sortingOrder = tileSortingOrder;
-                }
-            }
-
-            for (int i = 0; i < tiles.Length; i++)
-            {
-                int row = i / board.Cols;
-                int col = i - row * board.Cols;
-
-                tiles[i].transform.position = CellToWorld(i);
-                tiles[i].color = (row + col) % 2 == 0 ? tileLight : tileDark;
-            }
-        }
-
-        // Sized from the board rather than authored in the scene, so a 2x2 level and a 10x10 level
-        // both get a frame that fits without anyone remembering to resize it.
-        private void FitFrame()
-        {
-            Vector2 cells = new Vector2(board.Cols * CellSize, board.Rows * CellSize);
-
-            if (boardMask != null)
-            {
-                boardMask.transform.position = transform.position;
-                boardMask.transform.localScale = new Vector3(cells.x, cells.y, 1f);   // a one-unit square
-            }
-
-            if (boardTrim != null)
-            {
-                boardTrim.transform.position = transform.position;
-                boardTrim.size = cells + Vector2.one * (trimPadding * 2f);
-            }
-
-            if (boardFrame == null) return;
-
-            boardFrame.transform.position = transform.position;
-            boardFrame.size = new Vector2(
-                board.Cols * CellSize + framePadding * 2f,
-                board.Rows * CellSize + framePadding * 2f);
         }
 
         // Checked once, at bind time. An unassigned sprite otherwise surfaces as an invisible block or
