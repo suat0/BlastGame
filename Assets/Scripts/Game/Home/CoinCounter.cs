@@ -39,11 +39,31 @@ namespace BlastGame.Game.UI
         // Shows the saved total, minus a reward still to be flown in.
         public void Begin(int total, int pendingReward)
         {
+            // Called again by a reset while coins may still be in the air. Those belong to the old
+            // total; left running, each landing would add its share on top of the new one.
+            StopFlight();
+
+            // Without flyers there is nothing to fly the reward in with, so it is shown at once.
+            bool fly = pendingReward > 0 && flyers.Length > 0;
+
             target = total;
-            shown = total - pendingReward;
+            shown = fly ? total - pendingReward : total;
             label.SetText("{0:0}", shown);
 
-            if (pendingReward > 0) Fly(pendingReward);
+            if (fly) Fly(pendingReward);
+        }
+
+        // Stopping a tween does not run its completion, so no Land arrives for a stopped flyer.
+        private void StopFlight()
+        {
+            foreach (RectTransform flyer in flyers)
+            {
+                Tween.StopAll(flyer);
+                flyer.gameObject.SetActive(false);
+            }
+
+            flying = 0;
+            landed = 0;
         }
 
         private void Fly(int reward)
