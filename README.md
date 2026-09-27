@@ -165,11 +165,28 @@ raycast. The whole board has **one** `Update`; no block has one of its own.
 
 ### What was measured
 
-The `case-submission` build was measured in the editor: the Profiler reported **`GC allocated in
-frame: 0 B`** during play, and the board world drew as a **single batch** at every board size, with
-SetPass calls constant from a 2×2 board to a 10×10. v2 adds full-screen backgrounds, particles, a
-sprite mask and a much richer UI, and **has not been re-measured**, so those numbers are not claimed
-for it. The mechanisms above are unchanged, and are where to look first if it is.
+A short pass over v2, with a bot tapping every twelve frames. Draw calls come from the editor's
+Stats counters. Allocations come from a macOS development build, compared against the same scene
+with the game switched off, so the test runner's own overhead is excluded.
+
+| | Home | Level, idle | Level, playing | Level, end card |
+|---|---|---|---|---|
+| Batches | 9 | 14–15 | 16–18 | up to 23 |
+| SetPass calls | 3 | 11–12 | 13–14 | up to 18 |
+| GC per frame | 0 B, one ~7 KB frame | 0 B | 0 B in most frames, a few KB now and then | a one-off spike |
+
+- **The draw calls do not grow with the board.** A 2×2 level and a 10×10 level both idle at 14–15
+  batches; on the 10×10, batching saves about 200 draw calls. The board alone is **5 batches**,
+  against 1 in v1, and the rest comes from the background, the particles and the HUD.
+- **A move allocates nothing.** Across 98 moves, `TryBlastAt` and everything it triggers
+  synchronously allocated 0 B.
+- **The occasional allocations are one-off costs, not per-frame work.** Some frames right after a
+  move allocate a few KB, and the level's end allocates once. A short profiler capture put the
+  end-of-level cost on TextMeshPro growing its text buffers, popups enabled for the first time, and
+  the win.
+
+v1 (`case-submission`) measured 0 B during play and drew the board as a single batch. v2's extra
+batches come from the new layers: a full-screen background, particles and a much richer UI.
 
 Also verified: the engine-free boundary, by the compiler, and 65 test cases across 6 fixtures covering
 group finding and adjacency, icon tiers, gravity segmentation and Box damage, blast ordering, deadlock
@@ -359,8 +376,8 @@ JSON file, so moving to a server touches that class and `SaveSystem` only.
 
 ### Cheap enough to be next
 
-- **`ProfilerMarker` on the hot paths** (`Board.TryBlast`, `RecalculateGroups`), and a re-measurement
-  of v2 with them in place.
+- **`ProfilerMarker` on the hot paths** (`Board.TryBlast`, `RecalculateGroups`), so the numbers above
+  can be traced to code in the Profiler.
 - **A toggleable debug overlay** — group ids, group sizes, deadlock state, which blocks are settled.
 - **More `[Conditional]` invariants** — group sizes summing to the cell count, Box health staying
   inside 0–2. They vanish entirely from a release build.
