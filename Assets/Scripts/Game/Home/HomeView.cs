@@ -93,14 +93,7 @@ namespace BlastGame.Game.UI
         private void HandleLevelClicked()
         {
             int index = PlayerProgress.LevelIndex;
-            LevelConfig level = catalog.At(index);
-
-            // What Core will place, not what the level asks for: generation keeps the top row free of
-            // Boxes, so a request above that is clamped. The campaign never asks for that many, but the
-            // popup should not be able to promise a goal the board cannot hold.
-            int boxes = Mathf.Min(level.BoxCount, (level.Rows - 1) * level.Cols);
-
-            startPopup.Show(index + 1, level.IsHard, boxes, boxes > 0 ? level.MoveLimit : 0);
+            startPopup.Show(index + 1, catalog.At(index));
         }
 
         private void HandlePlayClicked()

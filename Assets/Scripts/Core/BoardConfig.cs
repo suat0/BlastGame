@@ -17,6 +17,12 @@ namespace BlastGame.Core
 
         public readonly int BoxCount;   // a request; generation clamps it to what the board can hold
 
+        // Icon tiers as TierFor returns them: the default icon, then the A, B and C icons.
+        public const int TierDefault = 0;
+        public const int TierA = 1;
+        public const int TierB = 2;
+        public const int TierC = 3;
+
         public BoardConfig(int rows, int cols, int colorCount,
                            int thresholdA, int thresholdB, int thresholdC,
                            int boxCount)
@@ -28,6 +34,22 @@ namespace BlastGame.Core
             ThresholdB = thresholdB;
             ThresholdC = thresholdC;
             BoxCount = boxCount;
+        }
+
+        // Every cell but the top row, which never holds a Box - see Board.Generate for why.
+        public int BoxCapacity => (Rows - 1) * Cols;
+
+        // What generation actually places. Anything that promises the player a goal before the board
+        // exists reads this, not BoxCount.
+        public int BoxesToPlace => Math.Min(BoxCount, BoxCapacity);
+
+        // Strictly greater, high to low, so a size equal to a threshold stays on the tier below.
+        public int TierFor(int groupSize)
+        {
+            if (groupSize > ThresholdC) return TierC;
+            if (groupSize > ThresholdB) return TierB;
+            if (groupSize > ThresholdA) return TierA;
+            return TierDefault;
         }
 
         // Also lives here, not only in LevelConfig.OnValidate, because tests build configs directly.

@@ -1,9 +1,10 @@
+using BlastGame.Core;
 using UnityEngine;
 
 namespace BlastGame.Game
 {
-    // Authoring surface for a level. Core is engine-free and never sees this type - GameController
-    // reads the values off and hands Core plain ints.
+    // Authoring surface for a level. Core is engine-free and never sees this type - it is handed a
+    // BoardConfig built by ToBoardConfig instead.
     [CreateAssetMenu(fileName = "LevelConfig", menuName = "Blast/Level Config")]
     public class LevelConfig : ScriptableObject
     {
@@ -53,6 +54,13 @@ namespace BlastGame.Game
         public int Seed => seed;             // zero means a fresh random board each session
 
         public bool IsHard => isHard;
+
+        // The one conversion point between this asset and Core. Move limit and seed stay behind:
+        // neither shapes a board.
+        public BoardConfig ToBoardConfig() => new BoardConfig(
+            rows, cols, colorCount,
+            thresholdA, thresholdB, thresholdC,
+            boxCount);
 
 #if UNITY_EDITOR
         // Range only guards the sliders; presets, scripted edits and Reset bypass it. This enforces.

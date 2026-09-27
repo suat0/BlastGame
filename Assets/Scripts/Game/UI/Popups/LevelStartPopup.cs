@@ -24,12 +24,19 @@ namespace BlastGame.Game.UI
 
         // levelNumber is one-based, as the player counts; zero means a debug level with no place in
         // the campaign.
-        public void Show(int levelNumber, bool hard, int boxes, int moves)
+        //
+        // Read from the level, not a session, so the home screen can brief a level before its board
+        // exists. The goal is what generation will place, and a level without one has no move
+        // limit - the same two rules GameSession applies.
+        public void Show(int levelNumber, LevelConfig level)
         {
+            int boxes = level.ToBoardConfig().BoxesToPlace;
+            int moves = boxes > 0 ? level.MoveLimit : 0;
+
             if (levelNumber > 0) titleLabel.SetText("Level {0:0}", levelNumber);
             else titleLabel.SetText("Test level");
 
-            hardRibbon.SetActive(hard);
+            hardRibbon.SetActive(level.IsHard);
 
             goalGroup.SetActive(boxes > 0);
             goalLabel.SetText("{0:0}", boxes);

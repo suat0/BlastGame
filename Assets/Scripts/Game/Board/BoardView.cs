@@ -25,9 +25,9 @@ namespace BlastGame.Game
             {
                 switch (tier)
                 {
-                    case 3: return iconC;
-                    case 2: return iconB;
-                    case 1: return iconA;
+                    case BoardConfig.TierC: return iconC;
+                    case BoardConfig.TierB: return iconB;
+                    case BoardConfig.TierA: return iconA;
                     default: return defaultIcon;
                 }
             }

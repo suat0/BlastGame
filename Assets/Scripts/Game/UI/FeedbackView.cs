@@ -118,15 +118,15 @@ namespace BlastGame.Game.UI
 
         private void ShowCombo()
         {
-            LevelConfig level = controller.Level;
-
-            if (groupSize > level.ThresholdC)
+            switch (controller.Config.TierFor(groupSize))
             {
-                Combo("Amazing!");
-                Flash();
+                case BoardConfig.TierC:
+                    Combo("Amazing!");
+                    Flash();
+                    break;
+                case BoardConfig.TierB: Combo("Great!"); break;
+                case BoardConfig.TierA: Combo("Good!"); break;
             }
-            else if (groupSize > level.ThresholdB) Combo("Great!");
-            else if (groupSize > level.ThresholdA) Combo("Good!");
         }
 
         private void Combo(string word)

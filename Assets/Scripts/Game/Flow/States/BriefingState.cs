@@ -6,14 +6,7 @@ namespace BlastGame.Game
     {
         public BriefingState(LevelFlow flow) : base(flow) { }
 
-        public override void Enter()
-        {
-            LevelConfig level = Flow.Controller.Level;
-            var session = Flow.Controller.Session;
-
-            Flow.StartPopup.Show(Flow.LevelNumber, level.IsHard, session.RemainingBoxes,
-                                 session.HasMoveLimit ? session.MovesLeft : 0);
-        }
+        public override void Enter() => Flow.StartPopup.Show(Flow.LevelNumber, Flow.Controller.Level);
 
         public override void Exit() => Flow.StartPopup.Hide();
 

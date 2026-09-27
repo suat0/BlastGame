@@ -39,7 +39,7 @@ Assets/Scripts/
 │   ├── Board/     BoardView, BlockView, BlockPool, BoardCamera
 │   ├── Effects/   FallAnimator, EffectRunner, Easing
 │   └── UI/        HudView
-└── Tests/EditMode/  63 test cases over Core, engine-free
+└── Tests/EditMode/  65 test cases over Core, engine-free
 ```
 
 ### 1. Core cannot reference the engine
@@ -140,7 +140,7 @@ The Profiler's memory module reports **`GC allocated in frame: 0 B`** while play
   <img src="Screenshots/allocation.png" width="560" alt="Profiler memory module: GC allocated in frame, 0 B">
 </p>
 
-Also verified: the engine-free boundary, by the compiler, and 63 test cases across 6 fixtures covering
+Also verified: the engine-free boundary, by the compiler, and 65 test cases across 6 fixtures covering
 group finding and adjacency, icon tiers, gravity segmentation and Box damage, blast ordering, deadlock
 detection, shuffle guarantees, and that generation never produces a board with no legal move.
 

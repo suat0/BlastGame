@@ -14,7 +14,7 @@ work` section of `README.md`.
 there does not fail review, it fails to compile. `UnityEngine.Random` is unreachable for the same
 reason, so randomness is injected as a `System.Random` and every board is reproducible from a seed.
 
-The payoff is the test suite: 63 cases that assert on rules, with no scene, no `GameObject` and no
+The payoff is the test suite: 65 cases that assert on rules, with no scene, no `GameObject` and no
 play mode.
 
 ### 2. Logic resolves instantly, animation trails behind
@@ -220,7 +220,7 @@ public event Action OnStatusChanged;
 
 **In:** blasting and icon tiers, the Box obstacle, gravity with segments, deadlock detection and
 resolution, the objective and move limit, scoring, the end-of-level panel, pooling, the sprite atlas,
-blast and landing effects, 63 unit tests.
+blast and landing effects, 65 unit tests.
 
 **Out:** progression across levels, a level editor, special blocks, chained combos, save/load,
 localisation. The `Scope and future work` section of `README.md` records the threshold at which each

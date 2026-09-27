@@ -5,8 +5,7 @@ using UnityEngine.Serialization;
 
 namespace BlastGame.Game
 {
-    // The Unity shell around a GameSession, and the one place LevelConfig meets Core - Core cannot see
-    // a ScriptableObject, so the values are copied into a BoardConfig here and nowhere else.
+    // The Unity shell around a GameSession, and the one place a level becomes a Core board.
     //
     // Holds no reference to anything that draws; the view and the HUD subscribe to it.
     public sealed class GameController : MonoBehaviour
@@ -38,6 +37,9 @@ namespace BlastGame.Game
 
         public LevelConfig Level { get; private set; }
 
+        // What the board was built from. Views ask it for the rules rather than restating them.
+        public BoardConfig Config { get; private set; }
+
         // Zero-based campaign position, or -1 for a debug level played straight from this scene.
         public int CampaignIndex { get; private set; } = -1;
 
@@ -60,21 +62,16 @@ namespace BlastGame.Game
 
             if (Level == null) throw new InvalidOperationException("No level requested and no debug level set.");
 
-            LevelConfig level = Level;
-
-            var config = new BoardConfig(
-                level.Rows, level.Cols, level.ColorCount,
-                level.ThresholdA, level.ThresholdB, level.ThresholdC,
-                level.BoxCount);
+            Config = Level.ToBoardConfig();
 
             // Core is handed the Random itself, not the seed, so nothing inside it can reach for a
             // global generator and break reproducibility. Seed 0 means a different board every run.
-            var rng = level.Seed == 0 ? new System.Random() : new System.Random(level.Seed);
+            var rng = Level.Seed == 0 ? new System.Random() : new System.Random(Level.Seed);
 
-            var board = new Board(config, rng);
+            var board = new Board(Config, rng);
             board.Generate();
 
-            session = new GameSession(board, level.MoveLimit);
+            session = new GameSession(board, Level.MoveLimit);
 
             OnBoardReady?.Invoke(board);
             OnStatusChanged?.Invoke();

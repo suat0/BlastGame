@@ -73,8 +73,8 @@ namespace BlastGame.Core
 
         private void PlaceBoxes()
         {
-            int boxCapacity = (Rows - 1) * Cols;
-            int toPlace = Math.Min(config.BoxCount, boxCapacity);
+            int boxCapacity = config.BoxCapacity;
+            int toPlace = config.BoxesToPlace;
             if (toPlace == 0) return;
 
             var candidates = new int[boxCapacity];
@@ -185,6 +185,9 @@ namespace BlastGame.Core
         public void RecalculateGroups() => groupFinder.Recalculate(cells);
 
         public int GroupSizeAt(int index) => groupFinder.GroupSizeAt(index);
+
+        // Two cells share an id exactly when they are in the same group; -1 for a cell in none.
+        public int GroupIdAt(int index) => groupFinder.GroupIdAt(index);
 
         public int TierAt(int index) => groupFinder.TierAt(index);
 

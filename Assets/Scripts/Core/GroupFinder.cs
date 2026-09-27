@@ -17,9 +17,7 @@ namespace BlastGame.Core
         private readonly int rows;
         private readonly int cols;
 
-        private readonly int thresholdA;
-        private readonly int thresholdB;
-        private readonly int thresholdC;
+        private readonly BoardConfig config;
 
         private readonly int[] groupIdOf;
         private readonly int[] groupSizes;
@@ -37,9 +35,7 @@ namespace BlastGame.Core
             rows = config.Rows;
             cols = config.Cols;
 
-            thresholdA = config.ThresholdA;
-            thresholdB = config.ThresholdB;
-            thresholdC = config.ThresholdC;
+            this.config = config;
 
             int cellCount = rows * cols;
 
@@ -117,20 +113,12 @@ namespace BlastGame.Core
             return groupId != NoGroup && groupSizes[groupId] >= MinBlastableSize;
         }
 
-        // 0 default, 1/2/3 the A/B/C icons. Derived on read rather than stored: three comparisons over
-        // data we already have, and a cached copy would go stale as a wrong sprite.
-        // Strictly greater, high to low, so a size equal to a threshold stays on the tier below.
+        // Derived on read rather than stored: three comparisons over data we already have, and a
+        // cached copy would go stale as a wrong sprite.
         public int TierAt(int cellIndex)
         {
             int groupId = groupIdOf[cellIndex];
-            if (groupId == NoGroup) return 0;
-
-            int size = groupSizes[groupId];
-
-            if (size > thresholdC) return 3;
-            if (size > thresholdB) return 2;
-            if (size > thresholdA) return 1;
-            return 0;
+            return groupId == NoGroup ? BoardConfig.TierDefault : config.TierFor(groupSizes[groupId]);
         }
 
         // This class knows the board's dimensions from its constructor but receives the data

@@ -152,6 +152,24 @@ namespace BlastGame.Tests
                 + "a board that can never answer");
         }
 
+        // --- The goal promised before the board exists is the goal it gets -----------------------
+
+        [TestCase(3, TestName = "a request the board can hold is placed as asked")]
+        [TestCase(200, TestName = "a request past the top-row rule is clamped, and the promise with it")]
+        public void BoxesToPlace_MatchesTheObjectiveGenerationProduces(int requested)
+        {
+            // The start popup reads BoxesToPlace from the level before any board is generated. If that
+            // and generation ever disagreed, the player would be briefed on one goal and handed another.
+            var config = new BoardConfig(4, 5, 3, 4, 7, 9, requested);
+
+            var board = new Board(config, new System.Random(7));
+            board.Generate();
+            var session = new GameSession(board, moveLimit: 10);
+
+            Assert.AreEqual(config.BoxesToPlace, session.RemainingBoxes);
+            Assert.LessOrEqual(config.BoxesToPlace, config.BoxCapacity);
+        }
+
         // --- Scoring ----------------------------------------------------------------------------
 
         [Test]
