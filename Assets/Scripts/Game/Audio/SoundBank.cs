@@ -42,6 +42,9 @@ namespace BlastGame.Game
         [SerializeField] private AudioClip homeMusic;
         [SerializeField] private AudioClip levelMusic;
 
+        // How many SfxId values exist, for anything that keeps one slot per sound.
+        public static readonly int IdCount = Enum.GetValues(typeof(SfxId)).Length;
+
         [NonSerialized] private Entry[] byId;
 
         public AudioClip HomeMusic => homeMusic;
@@ -52,7 +55,7 @@ namespace BlastGame.Game
         {
             if (byId == null)
             {
-                byId = new Entry[Enum.GetValues(typeof(SfxId)).Length];
+                byId = new Entry[IdCount];
                 foreach (Entry entry in entries) byId[(int)entry.id] = entry;
             }
 

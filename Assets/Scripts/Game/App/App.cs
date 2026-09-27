@@ -1,5 +1,6 @@
 using PrimeTween;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace BlastGame.Game
 {
@@ -34,13 +35,21 @@ namespace BlastGame.Game
             var prefab = Resources.Load<App>(PrefabPath);
             if (prefab == null)
             {
-                Debug.LogError($"No App prefab at Resources/{PrefabPath}; scene transitions will not work.");
+                Debug.LogError($"No App prefab at Resources/{PrefabPath}; scenes will load without a fade or sound.");
                 return;
             }
 
             Instance = Instantiate(prefab);
             Instance.name = prefab.name;
             DontDestroyOnLoad(Instance.gameObject);
+        }
+
+        // The one line every caller writes, like Sfx.Play. Without the App the scene still loads, just
+        // without the fade - Create has already logged why.
+        public static void LoadScene(string sceneName)
+        {
+            if (Instance != null && Instance.transition != null) Instance.transition.LoadScene(sceneName);
+            else SceneManager.LoadScene(sceneName);
         }
 
         private void Awake()

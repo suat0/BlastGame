@@ -34,7 +34,7 @@ namespace BlastGame.Game.UI
 
         private int lastScore;
         private int nextPopup;
-        private Vector3 tapWorld;
+        private int tapCell;
         private int groupSize;
 
         private void Awake()
@@ -77,7 +77,7 @@ namespace BlastGame.Game.UI
         // Read during the call and not kept - the result is Core's single reused instance.
         private void HandleBoardChanged(BlastResult result)
         {
-            tapWorld = boardView.CellToWorld(result.TappedIndex);
+            tapCell = result.TappedIndex;
             groupSize = result.BlastedGroupSize;
         }
 
@@ -105,7 +105,7 @@ namespace BlastGame.Game.UI
             popup.SetText("+{0:0}", points);
             popup.gameObject.SetActive(true);
 
-            Vector3 start = boardView.Camera.WorldToScreenPoint(tapWorld);
+            Vector3 start = boardView.CellToScreen(tapCell);
             t.position = start;
             t.localScale = Vector3.one * 0.6f;
             popup.alpha = 1f;

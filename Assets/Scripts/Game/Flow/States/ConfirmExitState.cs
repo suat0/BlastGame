@@ -14,13 +14,13 @@ namespace BlastGame.Game
 
         public void Leave()
         {
-            if (Flow.Current != this) return;
+            if (!IsCurrent) return;
             Flow.GoHome();
         }
 
         public void Stay()
         {
-            if (Flow.Current != this) return;
+            if (!IsCurrent) return;
             Flow.ChangeState(Flow.Paused);
         }
     }

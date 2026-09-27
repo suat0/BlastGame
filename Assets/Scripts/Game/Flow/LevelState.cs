@@ -14,6 +14,10 @@ namespace BlastGame.Game
 
         protected LevelState(LevelFlow flow) => Flow = flow;
 
+        // Guards every handler a button can reach. Buttons are wired once for the whole level, so a
+        // click can arrive while another state is current, and must then do nothing.
+        protected bool IsCurrent => Flow.Current == this;
+
         public virtual void Enter() { }
 
         public virtual void Exit() { }

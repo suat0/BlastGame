@@ -103,7 +103,7 @@ namespace BlastGame.Game.UI
             int index = PlayerProgress.LevelIndex;
 
             request.Set(catalog.At(index), index);
-            App.Instance.Transition.LoadScene(Scenes.Level);
+            App.LoadScene(Scenes.Level);
         }
 
         private void HandleStartCloseClicked() => startPopup.Hide();

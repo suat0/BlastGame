@@ -127,7 +127,7 @@ namespace BlastGame.Game.UI
 
             // An overlay canvas's world space is screen pixels, so the Box's screen position is where
             // its flyer starts.
-            Vector3 start = boardView.Camera.WorldToScreenPoint(world);
+            Vector3 start = boardView.WorldToScreen(world);
             Vector3 end = objectiveIcon.position;
 
             flyer.gameObject.SetActive(true);

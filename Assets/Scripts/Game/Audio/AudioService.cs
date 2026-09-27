@@ -43,7 +43,7 @@ namespace BlastGame.Game
             sourceStarted = new float[voices];
             for (int i = 0; i < voices; i++) sources[i] = CreateSource(false);
 
-            lastPlayed = new float[System.Enum.GetValues(typeof(SfxId)).Length];
+            lastPlayed = new float[SoundBank.IdCount];
             for (int i = 0; i < lastPlayed.Length; i++) lastPlayed[i] = float.NegativeInfinity;
 
             musicA = CreateSource(true);

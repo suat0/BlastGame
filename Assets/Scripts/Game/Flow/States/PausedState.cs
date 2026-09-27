@@ -24,7 +24,7 @@ namespace BlastGame.Game
 
         public void Resume()
         {
-            if (Flow.Current != this) return;
+            if (!IsCurrent) return;
 
             Time.timeScale = 1f;
             Flow.ChangeState(Flow.Playing);
@@ -32,7 +32,7 @@ namespace BlastGame.Game
 
         public void AskToLeave()
         {
-            if (Flow.Current != this) return;
+            if (!IsCurrent) return;
             Flow.ChangeState(Flow.ConfirmExit);
         }
     }

@@ -160,7 +160,11 @@ namespace BlastGame.Game
         // counter. A struct argument and a named listener, so raising it allocates nothing.
         public event Action<Vector3> OnBoxBroken;
 
-        public Camera Camera => boardCamera;
+        // For an overlay canvas, whose world space is screen pixels: where UI has to stand to sit over
+        // a point on the board.
+        public Vector3 WorldToScreen(Vector3 world) => boardCamera.WorldToScreenPoint(world);
+
+        public Vector3 CellToScreen(int cell) => WorldToScreen(CellToWorld(cell));
 
         private Board board;
         private BlockPool pool;

@@ -14,14 +14,14 @@ namespace BlastGame.Game
 
         public void Play()
         {
-            if (Flow.Current != this) return;
+            if (!IsCurrent) return;
             Flow.ChangeState(Flow.Intro);
         }
 
         // Closing the start popup of a level already failed once is walking away from it.
         public void Leave()
         {
-            if (Flow.Current != this) return;
+            if (!IsCurrent) return;
             Flow.GoHome();
         }
     }

@@ -18,7 +18,7 @@ namespace BlastGame.Game
 
         public void Retry()
         {
-            if (Flow.Current != this) return;
+            if (!IsCurrent) return;
 
             Flow.RestartLevel();
             Flow.ChangeState(Flow.Briefing);
@@ -26,7 +26,7 @@ namespace BlastGame.Game
 
         public void Leave()
         {
-            if (Flow.Current != this) return;
+            if (!IsCurrent) return;
             Flow.GoHome();
         }
     }

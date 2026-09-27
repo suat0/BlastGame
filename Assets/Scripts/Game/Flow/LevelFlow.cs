@@ -178,7 +178,7 @@ namespace BlastGame.Game
 
         public void RestartLevel() => controller.Restart();
 
-        public void GoHome() => App.Instance.Transition.LoadScene(Scenes.Home);
+        public void GoHome() => App.LoadScene(Scenes.Home);
 
         // One-based for display; zero for a debug level.
         public int LevelNumber => controller.IsCampaign ? controller.CampaignIndex + 1 : 0;

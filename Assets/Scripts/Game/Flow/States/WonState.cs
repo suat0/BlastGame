@@ -34,7 +34,7 @@ namespace BlastGame.Game
         public void Continue()
         {
             // Not before the card is up: a back press during the confetti would skip the reward.
-            if (Flow.Current != this || untilCard > 0f) return;
+            if (!IsCurrent || untilCard > 0f) return;
             Flow.GoHome();
         }
     }
