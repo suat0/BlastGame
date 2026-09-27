@@ -15,8 +15,6 @@ namespace BlastGame.Game
 
         public int Capacity => idle.Length;
 
-        public int RentedCount => idle.Length - idleCount;
-
         public BlockPool(BlockView prefab, Transform parent, int capacity,
                          SpriteMaskInteraction masking = SpriteMaskInteraction.None)
         {
@@ -42,11 +40,24 @@ namespace BlastGame.Game
         // leaked a block, and a pool that allocates its way out hides the bug it exists to catch.
         public BlockView Rent()
         {
-            if (idleCount == 0)
+            if (!TryRent(out BlockView block))
                 throw new InvalidOperationException(
                     $"Block pool exhausted at {Capacity} blocks; a rented block was never returned.");
 
-            BlockView block = idle[--idleCount];
+            return block;
+        }
+
+        // For a caller whose running out is expected rather than a bug - effects, which are dropped
+        // when every sprite is busy.
+        public bool TryRent(out BlockView block)
+        {
+            if (idleCount == 0)
+            {
+                block = null;
+                return false;
+            }
+
+            block = idle[--idleCount];
 
             // Effects hand blocks back mid-flight - a pop leaves one shrunken and transparent, a shard
             // leaves one turned. Reset everything an effect can write.
@@ -55,7 +66,7 @@ namespace BlastGame.Game
             block.Color = Color.white;
 
             block.gameObject.SetActive(true);
-            return block;
+            return true;
         }
 
         public void Return(BlockView block)

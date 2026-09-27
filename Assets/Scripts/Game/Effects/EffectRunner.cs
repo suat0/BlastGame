@@ -40,7 +40,9 @@ namespace BlastGame.Game
 
             public float Elapsed;
             public float Duration;
-            public float Scale;
+
+            // Borrowed effects only: how far a Squash flexes, or a Wiggle's first swing in degrees.
+            public float Amount;
         }
 
         private const float ShardGravity = -22f;
@@ -78,8 +80,7 @@ namespace BlastGame.Game
                 Kind = Kind.Pop,
                 Owned = true,
                 Position = position,
-                Duration = duration,
-                Scale = 1f
+                Duration = duration
             });
         }
 
@@ -105,8 +106,7 @@ namespace BlastGame.Game
                     Position = start,
                     Velocity = velocity,
                     AngularVelocity = RandomRange(-320f, 320f),
-                    Duration = duration * RandomRange(0.8f, 1.15f),
-                    Scale = scale
+                    Duration = duration * RandomRange(0.8f, 1.15f)
                 });
             }
         }
@@ -114,30 +114,18 @@ namespace BlastGame.Game
         // A block that just landed. It stays the board's - only its scale is written, and it is handed
         // back at exactly 1 so nothing downstream has to know this happened.
         public void Squash(BlockView block, float amount, float duration)
-        {
-            if (block == null) return;
-
-            // Landing twice in one duration would stack two writers on one scale.
-            Cancel(block);
-
-            if (count == effects.Length) return;
-
-            Add(new Effect
-            {
-                Block = block,
-                Kind = Kind.Squash,
-                Owned = false,
-                Duration = duration,
-                Scale = amount
-            });
-        }
+            => AddBorrowed(block, Kind.Squash, amount, duration);
 
         // A board block rocking about its centre and settling, borrowed like a Squash and handed back
         // upright. degrees is the first swing; each one after is smaller.
         public void Wiggle(BlockView block, float degrees, float duration)
+            => AddBorrowed(block, Kind.Wiggle, degrees, duration);
+
+        private void AddBorrowed(BlockView block, Kind kind, float amount, float duration)
         {
             if (block == null) return;
 
+            // A second effect on the same block would stack two writers on one scale or rotation.
             Cancel(block);
 
             if (count == effects.Length) return;
@@ -145,10 +133,10 @@ namespace BlastGame.Game
             Add(new Effect
             {
                 Block = block,
-                Kind = Kind.Wiggle,
+                Kind = kind,
                 Owned = false,
                 Duration = duration,
-                Scale = degrees
+                Amount = amount
             });
         }
 
@@ -268,7 +256,7 @@ namespace BlastGame.Game
         // that starts at full strength and eases to nothing, rather than stopping dead.
         private static void TickSquash(ref Effect effect, float t)
         {
-            float amount = effect.Scale * Easing.InQuad(1f - t);
+            float amount = effect.Amount * Easing.InQuad(1f - t);
             effect.Block.SetScale(1f + amount, 1f - amount);
         }
 
@@ -278,7 +266,7 @@ namespace BlastGame.Game
             const float Swings = 3.5f;
 
             float envelope = 1f - t;
-            effect.Block.Rotation = effect.Scale * envelope * Mathf.Sin(t * Swings * 2f * Mathf.PI);
+            effect.Block.Rotation = effect.Amount * envelope * Mathf.Sin(t * Swings * 2f * Mathf.PI);
         }
 
         // A borrowed board block goes back exactly as the board drew it: full size, upright.
@@ -295,9 +283,8 @@ namespace BlastGame.Game
             // Both caps are real: the effect array, and the sprites available to fill it. Dropping the
             // effect is the correct answer to either - see the class comment.
             if (count == effects.Length) return false;
-            if (pool.RentedCount == pool.Capacity) return false;
+            if (!pool.TryRent(out block)) return false;
 
-            block = pool.Rent();
             block.Sprite = sprite;
             block.Position = position;
             block.Scale = scale;
