@@ -16,10 +16,10 @@ board allocates after it is built.**
 
 ---
 
-## v2 — presentation update
+## v2 — from a board to a game
 
-v1 was a single board screen; that version is tagged **`v1`**. v2 dresses it as a small
-live game, modelled on the look and screen flow of commercial puzzle games.
+The first version, tagged **`v1`**, was the board on its own. v2 builds a small game around it: a
+home screen, a twelve-level campaign, and a briefing and end card for every level.
 
 | Home | Level briefing | Win |
 |:---:|:---:|:---:|
