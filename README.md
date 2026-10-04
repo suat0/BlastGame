@@ -1,12 +1,12 @@
 # Blast Villains
 
-A collapse / tile-matching game built for the Good Job Games case study, in **Unity 6000.2.6f2**.
+A collapse / tile-matching game built in **Unity 6000.2.6f2**.
 Tap any group of two or more adjacent same-coloured blocks to blast it; blocks above fall in and new
 ones drop from the top. Break every Box before the moves run out. A board this game generates can
 never reach a state with no legal move — that is a property of the code, held by a test rather than
 by an argument.
 
-The case names performance — memory, CPU, GPU — as its focus, so that is what the architecture is
+Performance — memory, CPU, GPU — is the focus, so that is what the architecture is
 organised around. The short version: **the game rules never touch the engine, and nothing on the
 board allocates after it is built.**
 
@@ -18,9 +18,8 @@ board allocates after it is built.**
 
 ## v2 — presentation update
 
-The case was submitted as a single board screen; that version is tagged **`case-submission`**. v2
-dresses it as a small live game, modelled on the look and screen flow of Good Job Games' *Match
-Villains*.
+v1 was a single board screen; that version is tagged **`v1`**. v2 dresses it as a small
+live game, modelled on the look and screen flow of commercial puzzle games.
 
 | Home | Level briefing | Win |
 |:---:|:---:|:---:|
@@ -185,7 +184,7 @@ with the game switched off, so the test runner's own overhead is excluded.
   end-of-level cost on TextMeshPro growing its text buffers, popups enabled for the first time, and
   the win.
 
-v1 (`case-submission`) measured 0 B during play and drew the board as a single batch. v2's extra
+v1 measured 0 B during play and drew the board as a single batch. v2's extra
 batches come from the new layers: a full-screen background, particles and a much richer UI.
 
 Also verified: the engine-free boundary, by the compiler, and 65 test cases across 6 fixtures covering
@@ -197,7 +196,7 @@ the goal shown before a level matches the Boxes it places.
 
 ## Presentation
 
-- **Board:** the block and Box sprites supplied with the case, over a checkerboard of cell tiles and
+- **Board:** the original block and Box sprites, over a checkerboard of cell tiles and
   under a generated ornate frame. A `SpriteMask` clips the board, so new blocks appear from behind the
   frame rather than in mid-air above it.
 - **Art:** backgrounds, characters, UI panels, buttons, icons and the logo were generated with AI image
@@ -284,12 +283,12 @@ Colour count is the main lever: every extra colour shrinks the groups and starve
 neighbours. Each seed is the one, out of two hundred, whose first board plays closest to the level's
 average, so a first attempt is typical rather than lucky. A win pays 20 coins plus 5 per move left.
 
-`Assets/Levels/Debug/` keeps the four v1 levels that cover the ends of the range the case allows —
+`Assets/Levels/Debug/` keeps the four v1 levels that cover the ends of the supported board-size range —
 `Level_2x2` is the quickest way to watch the deadlock shuffle fire.
 
 ### Editor tooling
 
-The assets were produced by editor-only tools, which are **left out of the submission** to keep it to
+The assets were produced by editor-only tools, which are **left out of the repository** to keep it to
 what the game needs. Everything they produced is here, and their import settings are recorded in the
 `.meta` files, so the project opens and runs exactly as without them. What they did:
 
@@ -347,7 +346,7 @@ deterministic and seeded, so the substrate exists; only the recording does not.
 **Weighted spawner** — refills drawn against the board's state rather than uniformly. This is the
 standard industry lever: it guarantees a legal move survives, and the same mechanism is the primary
 difficulty control. `GravityResolver` draws uniformly per cell, so deadlock is *resolved* rather than
-*prevented* — the right trade here, because the case asks for detection and resolution by name. The
+*prevented* — the right trade here, because detection and resolution are the stated requirement. The
 campaign is tuned through board size, colour count, Boxes and moves instead.
 **Threshold:** when the difficulty curve needs finer control than those four numbers give.
 
@@ -368,9 +367,9 @@ JSON file, so moving to a server touches that class and `SaveSystem` only.
 | Missing | Why it matters | Why not here |
 |---|---|---|
 | CI on every push | Catches regressions before a merge | One developer, one branch |
-| Performance regression tests | Answers "did this commit start allocating?" | Setup costs more than the case does |
+| Performance regression tests | Answers "did this commit start allocating?" | Setup costs more than a project this size does |
 | Roslyn analyzers, `.editorconfig` | Enforces style and error rules at compile time | Critical in a team, friction alone for one person |
-| Analytics and crash reporting | A product requirement | Not a case requirement |
+| Analytics and crash reporting | A product requirement | Not a requirement here |
 | A coverage threshold | Test discipline | A percentage target buys easy tests at the expense of valuable ones |
 
 ### Cheap enough to be next
@@ -386,7 +385,7 @@ JSON file, so moving to a server touches that class and `SaveSystem` only.
 Boosters, special blocks, chained combo scoring, lives, cloud save, localisation. The home screen
 shows buttons for several of these; they are a mock-up and say so when tapped.
 
-The one exception worth naming is accessibility: the case's own rule that every colour carries a
+The one exception worth naming is accessibility: the rule that every colour carries a
 different icon already does most of the work for colour-blind players.
 
 ---
